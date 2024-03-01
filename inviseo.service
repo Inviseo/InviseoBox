@@ -1,0 +1,13 @@
+[Unit]
+Description=Service de l'application principale
+After=network.target
+
+[Service]
+User=user
+Group=user
+WorkingDirectory=/home/user
+ExecStart=sudo /home/user/inviseobox/venv/bin/python /home/user/main.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
