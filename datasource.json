@@ -19,8 +19,10 @@
             "parameters": {
               "register": "0x04",
               "address": 12,
-              "slave": 2,
-              "count": 1
+              "slave": 7,
+              "count": 2,
+              "byte_order": "3-2-1-0",
+              "value_class": "FLOAT32"
             },
             "response_format": ["min", "max", "avg"]
           }
@@ -29,9 +31,11 @@
           "consommation": {
             "parameters": {
               "register": "0x04",
-              "address": 12,
-              "slave": 2,
-              "count": 1
+              "address": 72,
+              "slave": 1,
+              "count": 2,
+              "byte_order": "3-2-1-0",
+              "value_class": "FLOAT32"
             },
             "response_format": ["diff"]
           }
