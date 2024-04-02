@@ -157,7 +157,6 @@ def sendMeasurementToAPI(instrument):
             with open("./outputsInTxt/avg_values.txt", "a") as f:
                 f.write(f"La valeur moyenne de la mesure {measurement_name} est {avg_value}\n")
                 
-        
         if "diff" in measurement_details["response_format"]:
             first_value = c.execute("SELECT valeur FROM mesures WHERE mesure = ? ORDER BY date ASC LIMIT 1", (measurement_name,)).fetchone()[0]
             last_value = c.execute("SELECT valeur FROM mesures WHERE mesure = ? ORDER BY date DESC LIMIT 1", (measurement_name,)).fetchone()[0]
@@ -180,12 +179,12 @@ def run_for_30_minutes():
     c.execute("CREATE TABLE IF NOT EXISTS mesures (id INTEGER PRIMARY KEY AUTOINCREMENT, capteur_id INTEGER, mesure TEXT, valeur REAL, date TEXT)")
     conn.commit()
 
-    with open('datasource.json') as f:
+    with open('./datasource.json') as f:
         data = json.load(f)
 
     instruments = data["instruments"]
     start_time = time.time()
-    while time.time() - start_time < 10 :  # Boucle pendant 30 minutes
+    while time.time() - start_time < 30 * 60 :  # Boucle pendant 30 minutes
         # Récupération des données depuis les instruments
         for instrument in instruments:
             if instrument["protocol"] == "Modbus" and instrument["mode"] == "RTU" and instrument["type"] == "RS-485":

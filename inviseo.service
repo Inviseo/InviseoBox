@@ -3,11 +3,9 @@ Description=Service de l'application principale
 After=network.target
 
 [Service]
-User=user
-Group=user
-WorkingDirectory=/home/user
-ExecStart=sudo /home/user/inviseobox/venv/bin/python /home/user/main.py
-Restart=always
+User=root
+WorkingDirectory=/home/amaurice/Bureau/inviseo/InviseoBox/
+ExecStart=/home/amaurice/Bureau/inviseo/InviseoBox/venv/bin/python /home/amaurice/Bureau/inviseo/InviseoBox/main.py
 
 [Install]
 WantedBy=multi-user.target
