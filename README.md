@@ -39,14 +39,18 @@ Un fichier `inviseo.service` est fourni pour installer le service sur un systèm
 Les commandes suivantes permettent d'installer le service :
 ```bash
 sudo cp inviseo.service /etc/systemd/system/
-sudo systemctl daemon-reload
 sudo systemctl enable inviseo
+sudo systemctl daemon-reload
 sudo systemctl start inviseo
 ```
 
-IMPORTANT :
-Le fichier `main.py` doit être exécuté avec `sudo` pour pouvoir accéder aux ports série. Pour éviter de devoir taper le mot de passe à chaque démarrage (ce qui serait problématique pour un service, sur une machine distante), il est possible désactiver le mot de passe pour la commande `sudo` pour l'utilisateur `user` en ajoutant la ligne suivante à la fin du fichier `/etc/sudoers` :
+# RESTE A FAIRE
 
-```
-user ALL=(ALL) NOPASSWD: /usr/bin/python3 /home/user/inviseo-box/main.py
-```
+- [x] Interpréter correctement les données
+- [x] Assurer la boucle de récupération des données
+- [ ] Gestion des erreurs
+- [ ] Transformer les instruments en classes
+- [ ] Faire le call à l'API
+- [ ] Réaliser les tests (unitaire, d'intégration, de bout en bout)
+- [ ] Gestion des logs
+- [ ] Permettre un script pour pull automatiquement le code
