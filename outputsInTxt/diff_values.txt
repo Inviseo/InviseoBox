@@ -1,0 +1,4 @@
+La différence entre la première et la dernière valeur de la mesure 2 est 0.02490234375
+La différence entre la première et la dernière valeur de la mesure 2 est 0.02099609375
+La différence entre la première et la dernière valeur de la mesure 2 est 0.02001953125
+La différence entre la première et la dernière valeur de la mesure 2 est 0.02099609375

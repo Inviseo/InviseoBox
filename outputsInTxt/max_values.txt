@@ -1,0 +1,16 @@
+La valeur maximale de la mesure 1 est 71.0
+La valeur maximale de la mesure 3 est 24.09
+La valeur maximale de la mesure 4 est 42.4
+La valeur maximale de la mesure 5 est 647.0
+La valeur maximale de la mesure 1 est 67.4000015258789
+La valeur maximale de la mesure 3 est 24.15
+La valeur maximale de la mesure 4 est 42.42
+La valeur maximale de la mesure 5 est 662.0
+La valeur maximale de la mesure 1 est 66.69999694824219
+La valeur maximale de la mesure 3 est 24.15
+La valeur maximale de la mesure 4 est 42.44
+La valeur maximale de la mesure 5 est 663.0
+La valeur maximale de la mesure 1 est 66.0
+La valeur maximale de la mesure 3 est 24.17
+La valeur maximale de la mesure 4 est 42.41
+La valeur maximale de la mesure 5 est 662.0
