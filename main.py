@@ -130,45 +130,58 @@ def fetchDataFromWebService(instrument):
         conn.commit()
         
 
-def sendMeasurementToAPI(instrument):
-    for measurement in instrument["measurements"]:
-        measurement_id = measurement["id"]
-        measurement_configuration = measurement["configuration"]
-        if "min" in measurement_configuration["response_format"]:
-            conn = sqlite3.connect('data.db')
-            c = conn.cursor()
-            min_value = c.execute("SELECT MIN(value) FROM measurements WHERE measurement = ?", (measurement_id,)).fetchone()[0]
-            # Sera à remplacer par une requête HTTP POST
-            print(f"La valeur minimale de la mesure {measurement_id} est {min_value}")
-            # L'écrire dans un  fichier txt
-            with open("./outputsInTxt/min_values.txt", "a") as f:
-                f.write(f"La valeur minimale de la mesure {measurement_id} est {min_value}\n")
+def sendMeasurementToAPI(instruments):
+    measurements_data = {"measurements": []}
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    
+    for instrument in instruments:
+        for measurement in instrument["measurements"]:
+            measurement_id = measurement["id"]
+            measurement_configuration = measurement["configuration"]
+            response = {}
+
+            if "min" in measurement_configuration["response_format"]:
+                print(f"SELECT MIN(value) FROM measurements WHERE measurement = {measurement_id}")
+                min_value = c.execute("SELECT MIN(value) FROM measurements WHERE measurement = ?", measurement_id).fetchone()[0]
+                print("minvalue", min_value)
+                response["min"] = str(min_value)
+                print("response", response)
             
-        if "max" in measurement_configuration["response_format"]:
-            max_value = c.execute("SELECT MAX(value) FROM measurements WHERE measurement = ?", (measurement_id,)).fetchone()[0]
-            # Sera à remplacer par une requête HTTP POST
-            print(f"La valeur maximale de la mesure {measurement_id} est {max_value}")
-            with open("./outputsInTxt/max_values.txt", "a") as f:
-                f.write(f"La valeur maximale de la mesure {measurement_id} est {max_value}\n")
-                
+            if "max" in measurement_configuration["response_format"]:
+                max_value = c.execute("SELECT MAX(value) FROM measurements WHERE measurement = ?", measurement_id).fetchone()[0]
+                response["max"] = str(max_value)
             
-        if "avg" in measurement_configuration["response_format"]:
-            avg_value = c.execute("SELECT AVG(value) FROM measurements WHERE measurement = ?", (measurement_id,)).fetchone()[0]
-            # Sera à remplacer par une requête HTTP POST
-            print(f"La valeur moyenne de la mesure {measurement_id} est {avg_value}")
-            with open("./outputsInTxt/avg_values.txt", "a") as f:
-                f.write(f"La valeur moyenne de la mesure {measurement_id} est {avg_value}\n")
-                
-        if "diff" in measurement_configuration["response_format"]:
-            first_value = c.execute("SELECT value FROM measurements WHERE measurement = ? ORDER BY date ASC LIMIT 1", (measurement_id,)).fetchone()[0]
-            last_value = c.execute("SELECT value FROM measurements WHERE measurement = ? ORDER BY date DESC LIMIT 1", (measurement_id,)).fetchone()[0]
-            diff_value = last_value - first_value
-            # Sera à remplacer par une requête HTTP POST
-            print(f"La différence entre la première et la dernière valeur de la mesure {measurement_id} est {diff_value}")
+            if "avg" in measurement_configuration["response_format"]:
+                avg_value = c.execute("SELECT AVG(value) FROM measurements WHERE measurement = ?", measurement_id).fetchone()[0]
+                response["avg"] = str(avg_value)
             
-            with open("./outputsInTxt/diff_values.txt", "a") as f:
-                f.write(f"La différence entre la première et la dernière valeur de la mesure {measurement_id} est {diff_value}\n")
-                
+            if "diff" in measurement_configuration["response_format"]:
+                first_value = c.execute("SELECT value FROM measurements WHERE measurement = ? ORDER BY date ASC LIMIT 1", measurement_id).fetchone()[0]
+                last_value = c.execute("SELECT value FROM measurements WHERE measurement = ? ORDER BY date DESC LIMIT 1", measurement_id).fetchone()[0]
+                diff_value = last_value - first_value
+                response["diff"] = str(diff_value)
+            
+            measurements_data["measurements"].append({"id": measurement_id, "response": response})
+
+    # Si ./outputs/output1.json n'existe pas, le fichier sera créé
+    if not os.path.exists("./outputs/output1.json"):
+        with open("./outputs/output1.json", "w") as f:
+            print("writing to file: ", measurements_data)
+            json.dump(measurements_data, f, indent=4) 
+    else:
+        # récupérer le dernier numéro de fichier qui suit le format outputX.json
+        files = os.listdir("./outputs")
+        files = [file for file in files if file.startswith("output") and file.endswith(".json")]
+        files.sort()
+        last_file = files[-1]
+        last_file_number = int(last_file[6:-5])
+        new_file_number = last_file_number + 1
+        new_file_name = f"output{new_file_number}.json"
+        with open(f"./outputs/{new_file_name}", "w") as f:
+            print("writing to file: ", measurements_data)
+            json.dump(measurements_data, f, indent=4)
+
 
 # Fonction pour exécuter une tâche en boucle pendant 30 minutes
 def run_for_30_minutes():
@@ -196,8 +209,7 @@ def run_for_30_minutes():
         time.sleep(1)  # Attente d'une seconde pour éviter une utilisation excessive du processeur
         
     # Envoi des données à l'API
-    for instrument in instruments:
-        sendMeasurementToAPI(instrument)
+    sendMeasurementToAPI(instruments)
 
     conn.close()
 
