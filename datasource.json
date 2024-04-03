@@ -3,19 +3,22 @@
     {
       "id": "1",
       "name": "Compteur 1",
-      "protocol": "Modbus",
-      "mode": "RTU",
-      "type": "RS-485",
-      "configuration": {
-        "serial_port": "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0",
-        "stopbits": 1,
-        "bytesize": 8,
-        "parity": "N",
-        "baudrate": 9600
+      "communication": {
+        "protocol": "Modbus",
+        "mode": "RTU",
+        "type": "RS-485",
+        "configuration": {
+          "serial_port": "/dev/serial/by-id/usb-Silicon_Labs_CP2102_USB_to_UART_Bridge_Controller_0001-if00-port0",
+          "stopbits": 1,
+          "bytesize": 8,
+          "parity": "N",
+          "baudrate": 9600
+        }
       },
       "measurements": [
         {
-          "puissance": {
+          "id": "1",
+          "configuration": {
             "parameters": {
               "register": "0x04",
               "address": 12,
@@ -28,7 +31,8 @@
           }
         },
         {
-          "consommation": {
+          "id": "2",
+          "configuration": {
             "parameters": {
               "register": "0x04",
               "address": 72,
@@ -44,13 +48,17 @@
     },
     {
       "id": "2",
-      "protocol": "WebService",
-      "configuration": {
-        "url": "http://192.168.3.16/"
+      "name": "Compteur 2",
+      "communication": {
+        "protocol": "WebService",
+        "configuration": {
+          "url": "http://192.168.3.16/"
+        }
       },
       "measurements": [
         {
-          "temp": {
+          "id": "3",
+          "configuration": {
             "parameters": {
               "key": "temp"
             },
@@ -58,10 +66,20 @@
           }
         },
         {
-          "hum": {
+          "id": "4",
+          "configuration": {
+            "parameters": {
+              "key": "hum"
+            },
             "response_format": ["min", "max", "avg"]
-          },
-          "CO2": {
+          }
+        },
+        {
+          "id": "5",
+          "configuration": {
+            "parameters": {
+              "key": "CO2"
+            },
             "response_format": ["min", "max", "avg"]
           }
         }

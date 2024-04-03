@@ -67,8 +67,9 @@ async def fetchDataFromModbusDevice(client, instrument):
     
     for measurement in measurements:
         # Récupération du nom de la mesure
-        measurement_name, measurement_details = next(iter(measurement.items()))
-        parameters = measurement_details["parameters"]
+        measurement_id = measurement["id"]
+        measurement_configuration = measurement["configuration"]
+        parameters = measurement_configuration["parameters"]
         # Lecture des données en fonction du registre spécifié
         register = parameters["register"]
         address = parameters["address"]
@@ -94,11 +95,11 @@ async def fetchDataFromModbusDevice(client, instrument):
             decoded_response = decode_value(byte_order, value_class, response.registers)
             conn = sqlite3.connect('data.db')
             c = conn.cursor()
-            c.execute("INSERT INTO mesures (capteur_id, mesure, valeur, date) VALUES (?, ?, ?, datetime('now'))", (instrument["id"], measurement_name, decoded_response))
+            c.execute("INSERT INTO mesures (capteur_id, measurement, valeur, date) VALUES (?, ?, ?, datetime('now'))", (instrument["id"], measurement_id, decoded_response))
             conn.commit()
 
 async def run(instrument):
-    configuration = instrument["configuration"]
+    configuration = instrument["communication"]["configuration"]
     
     serial_port = configuration["serial_port"]
     stopbits=configuration["stopbits"]
@@ -121,51 +122,51 @@ def fetchDataFromWebService(instrument):
     response = requests.get(url)
     response.raise_for_status()  # Lève une exception pour les codes d'erreur HTTP
     for measurement in instrument["measurements"]:
-        measurement_name, measurement_details = next(iter(measurement.items()))
+        measurement_id, measurement_configuration = next(iter(measurement.items()))
         conn = sqlite3.connect('data.db')
         c = conn.cursor()
-        c.execute("INSERT INTO mesures (capteur_id, mesure, valeur, date) VALUES (?, ?, ?, datetime('now'))", (instrument["id"], measurement_name, response.json()[measurement_name]))
+        c.execute("INSERT INTO mesures (capteur_id, measurement, valeur, date) VALUES (?, ?, ?, datetime('now'))", (instrument["id"], measurement_id, response.json()[measurement_id]))
         conn.commit()
         
-        
+
 def sendMeasurementToAPI(instrument):
     for measurement in instrument["measurements"]:
-        measurement_name, measurement_details = next(iter(measurement.items()))
-        if "min" in measurement_details["response_format"]:
+        measurement_id, measurement_configuration = next(iter(measurement.items()))
+        if "min" in measurement_configuration["response_format"]:
             conn = sqlite3.connect('data.db')
             c = conn.cursor()
-            min_value = c.execute("SELECT MIN(valeur) FROM mesures WHERE mesure = ?", (measurement_name,)).fetchone()[0]
+            min_value = c.execute("SELECT MIN(valeur) FROM mesures WHERE measurement = ?", (measurement_id,)).fetchone()[0]
             # Sera à remplacer par une requête HTTP POST
-            print(f"La valeur minimale de la mesure {measurement_name} est {min_value}")
+            print(f"La valeur minimale de la mesure {measurement_id} est {min_value}")
             # L'écrire dans un  fichier txt
             with open("./outputsInTxt/min_values.txt", "a") as f:
-                f.write(f"La valeur minimale de la mesure {measurement_name} est {min_value}\n")
+                f.write(f"La valeur minimale de la mesure {measurement_id} est {min_value}\n")
                 
             
-        if "max" in measurement_details["response_format"]:
-            max_value = c.execute("SELECT MAX(valeur) FROM mesures WHERE mesure = ?", (measurement_name,)).fetchone()[0]
+        if "max" in measurement_configuration["response_format"]:
+            max_value = c.execute("SELECT MAX(valeur) FROM mesures WHERE measurement = ?", (measurement_id,)).fetchone()[0]
             # Sera à remplacer par une requête HTTP POST
-            print(f"La valeur maximale de la mesure {measurement_name} est {max_value}")
+            print(f"La valeur maximale de la mesure {measurement_id} est {max_value}")
             with open("./outputsInTxt/max_values.txt", "a") as f:
-                f.write(f"La valeur maximale de la mesure {measurement_name} est {max_value}\n")
+                f.write(f"La valeur maximale de la mesure {measurement_id} est {max_value}\n")
                 
             
-        if "avg" in measurement_details["response_format"]:
-            avg_value = c.execute("SELECT AVG(valeur) FROM mesures WHERE mesure = ?", (measurement_name,)).fetchone()[0]
+        if "avg" in measurement_configuration["response_format"]:
+            avg_value = c.execute("SELECT AVG(valeur) FROM mesures WHERE measurement = ?", (measurement_id,)).fetchone()[0]
             # Sera à remplacer par une requête HTTP POST
-            print(f"La valeur moyenne de la mesure {measurement_name} est {avg_value}")
+            print(f"La valeur moyenne de la mesure {measurement_id} est {avg_value}")
             with open("./outputsInTxt/avg_values.txt", "a") as f:
-                f.write(f"La valeur moyenne de la mesure {measurement_name} est {avg_value}\n")
+                f.write(f"La valeur moyenne de la mesure {measurement_id} est {avg_value}\n")
                 
-        if "diff" in measurement_details["response_format"]:
-            first_value = c.execute("SELECT valeur FROM mesures WHERE mesure = ? ORDER BY date ASC LIMIT 1", (measurement_name,)).fetchone()[0]
-            last_value = c.execute("SELECT valeur FROM mesures WHERE mesure = ? ORDER BY date DESC LIMIT 1", (measurement_name,)).fetchone()[0]
+        if "diff" in measurement_configuration["response_format"]:
+            first_value = c.execute("SELECT valeur FROM mesures WHERE measurement = ? ORDER BY date ASC LIMIT 1", (measurement_id,)).fetchone()[0]
+            last_value = c.execute("SELECT valeur FROM mesures WHERE measurement = ? ORDER BY date DESC LIMIT 1", (measurement_id,)).fetchone()[0]
             diff_value = last_value - first_value
             # Sera à remplacer par une requête HTTP POST
-            print(f"La différence entre la première et la dernière valeur de la mesure {measurement_name} est {diff_value}")
+            print(f"La différence entre la première et la dernière valeur de la mesure {measurement_id} est {diff_value}")
             
             with open("./outputsInTxt/diff_values.txt", "a") as f:
-                f.write(f"La différence entre la première et la dernière valeur de la mesure {measurement_name} est {diff_value}\n")
+                f.write(f"La différence entre la première et la dernière valeur de la mesure {measurement_id} est {diff_value}\n")
                 
 
 # Fonction pour exécuter une tâche en boucle pendant 30 minutes
@@ -176,7 +177,7 @@ def run_for_30_minutes():
 
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
-    c.execute("CREATE TABLE IF NOT EXISTS mesures (id INTEGER PRIMARY KEY AUTOINCREMENT, capteur_id INTEGER, mesure TEXT, valeur REAL, date TEXT)")
+    c.execute("CREATE TABLE IF NOT EXISTS mesures (id INTEGER PRIMARY KEY AUTOINCREMENT, capteur_id INTEGER, measurement TEXT, valeur REAL, date TEXT)")
     conn.commit()
 
     with open('./datasource.json') as f:
@@ -187,7 +188,7 @@ def run_for_30_minutes():
     while time.time() - start_time < 30 * 60 :  # Boucle pendant 30 minutes
         # Récupération des données depuis les instruments
         for instrument in instruments:
-            if instrument["protocol"] == "Modbus" and instrument["mode"] == "RTU" and instrument["type"] == "RS-485":
+            if instrument["communication"]["protocol"] == "Modbus" and instrument["communication"]["mode"] == "RTU" and instrument["communication"]["type"] == "RS-485":
                 asyncio.run(run(instrument))
         time.sleep(1)  # Attente d'une seconde pour éviter une utilisation excessive du processeur
         
