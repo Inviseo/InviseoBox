@@ -118,6 +118,7 @@ async def run(instrument):
 
 def fetchDataFromWebService(instrument):
     url = instrument["communication"]["configuration"]["url"]
+    
     # Faire la requête HTTP
     response = requests.get(url)
     response.raise_for_status()  # Lève une exception pour les codes d'erreur HTTP
@@ -142,23 +143,20 @@ def sendMeasurementToAPI(instruments):
             response = {}
 
             if "min" in measurement_configuration["response_format"]:
-                print(f"SELECT MIN(value) FROM measurements WHERE measurement = {measurement_id}")
-                min_value = c.execute("SELECT MIN(value) FROM measurements WHERE measurement = ?", measurement_id).fetchone()[0]
-                print("minvalue", min_value)
+                min_value = c.execute(f"SELECT MIN(value) FROM measurements WHERE measurement = \'{measurement_id}\'").fetchone()[0]
                 response["min"] = str(min_value)
-                print("response", response)
             
             if "max" in measurement_configuration["response_format"]:
-                max_value = c.execute("SELECT MAX(value) FROM measurements WHERE measurement = ?", measurement_id).fetchone()[0]
+                max_value = c.execute(f"SELECT MAX(value) FROM measurements WHERE measurement = \'{measurement_id}\'").fetchone()[0]
                 response["max"] = str(max_value)
             
             if "avg" in measurement_configuration["response_format"]:
-                avg_value = c.execute("SELECT AVG(value) FROM measurements WHERE measurement = ?", measurement_id).fetchone()[0]
+                avg_value = c.execute(f"SELECT AVG(value) FROM measurements WHERE measurement = \'{measurement_id}\'").fetchone()[0]
                 response["avg"] = str(avg_value)
             
             if "diff" in measurement_configuration["response_format"]:
-                first_value = c.execute("SELECT value FROM measurements WHERE measurement = ? ORDER BY date ASC LIMIT 1", measurement_id).fetchone()[0]
-                last_value = c.execute("SELECT value FROM measurements WHERE measurement = ? ORDER BY date DESC LIMIT 1", measurement_id).fetchone()[0]
+                first_value = c.execute(f"SELECT value FROM measurements WHERE measurement = \'{measurement_id}\' ORDER BY date ASC LIMIT 1").fetchone()[0]
+                last_value = c.execute(f"SELECT value FROM measurements WHERE measurement = \'{measurement_id}\' ORDER BY date DESC LIMIT 1").fetchone()[0]
                 diff_value = last_value - first_value
                 response["diff"] = str(diff_value)
             
@@ -167,7 +165,6 @@ def sendMeasurementToAPI(instruments):
     # Si ./outputs/output1.json n'existe pas, le fichier sera créé
     if not os.path.exists("./outputs/output1.json"):
         with open("./outputs/output1.json", "w") as f:
-            print("writing to file: ", measurements_data)
             json.dump(measurements_data, f, indent=4) 
     else:
         # récupérer le dernier numéro de fichier qui suit le format outputX.json
@@ -179,8 +176,32 @@ def sendMeasurementToAPI(instruments):
         new_file_number = last_file_number + 1
         new_file_name = f"output{new_file_number}.json"
         with open(f"./outputs/{new_file_name}", "w") as f:
-            print("writing to file: ", measurements_data)
             json.dump(measurements_data, f, indent=4)
+
+def authenticate(email, password):
+    url = "http://localhost:3000/api/auth/login"
+    payload = {
+        "email": email,
+        "password": password
+    }
+    response = requests.post(url, json=payload)
+    data = response.json()
+    if "token" in data:
+        return data["token"]
+    else:
+        return None
+
+def get_devices(token, building_id):
+    url = "http://localhost:3000/api/devices/"
+    headers = {
+        "Authorization": "Bearer " + token,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "buildingId": building_id
+    }
+    response = requests.get(url, headers=headers, json=payload) # Utilisation de json=payload pour inclure le corps de la requête
+    return response.json()
 
 
 # Fonction pour exécuter une tâche en boucle pendant 30 minutes
@@ -191,17 +212,29 @@ def run_for_30_minutes():
 
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
-    c.execute("CREATE TABLE IF NOT EXISTS measurements (id INTEGER PRIMARY KEY AUTOINCREMENT, measurement_id INTEGER, measurement TEXT, value REAL, date TEXT)")
+    c.execute("CREATE TABLE IF NOT EXISTS measurements (id INTEGER PRIMARY KEY AUTOINCREMENT, measurement_id TEXT, measurement TEXT, value REAL, date TEXT)")
     conn.commit()
 
-    with open('./datasource.json') as f:
-        data = json.load(f)
+    # with open('./datasource.json') as f:
+    #     data = json.load(f)
+        
+    email = "hizaaknewton@gmail.com"
+    password = "amaurice"
+    building_id = "660d424a69a048487ec848bb"
 
-    instruments = data["instruments"]
+    # Authentification et récupération du token
+    token = authenticate(email, password)
+    if token:
+        # Utilisation du token pour obtenir les appareils
+        data = get_devices(token, building_id)
+    else:
+        print("Échec de l'authentification.")
+
+
     start_time = time.time()
     while time.time() - start_time < 60 :  # Boucle pendant 30 minutes
         # Récupération des données depuis les instruments
-        for instrument in instruments:
+        for instrument in data:
             if instrument["communication"]["protocol"] == "Modbus" and instrument["communication"]["mode"] == "RTU" and instrument["communication"]["type"] == "RS-485":
                 asyncio.run(run(instrument))
             elif instrument["communication"]["protocol"] == "WebService":
@@ -209,7 +242,7 @@ def run_for_30_minutes():
         time.sleep(1)  # Attente d'une seconde pour éviter une utilisation excessive du processeur
         
     # Envoi des données à l'API
-    sendMeasurementToAPI(instruments)
+    sendMeasurementToAPI(data)
 
     conn.close()
 
