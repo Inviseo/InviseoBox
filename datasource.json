@@ -1,8 +1,8 @@
-{
-  "instruments": [
-    {
-      "id": "1",
-      "name": "Compteur 1",
+[
+  {
+    "id": "1",
+    "name": "Compteur 1",
+    "communication": {
       "protocol": "Modbus",
       "mode": "RTU",
       "type": "RS-485",
@@ -12,60 +12,76 @@
         "bytesize": 8,
         "parity": "N",
         "baudrate": 9600
-      },
-      "measurements": [
-        {
-          "puissance": {
-            "parameters": {
-              "register": "0x04",
-              "address": 12,
-              "slave": 7,
-              "count": 2,
-              "byte_order": "3-2-1-0",
-              "value_class": "FLOAT32"
-            },
-            "response_format": ["min", "max", "avg"]
-          }
-        },
-        {
-          "consommation": {
-            "parameters": {
-              "register": "0x04",
-              "address": 72,
-              "slave": 1,
-              "count": 2,
-              "byte_order": "3-2-1-0",
-              "value_class": "FLOAT32"
-            },
-            "response_format": ["diff"]
-          }
-        }
-      ]
+      }
     },
-    {
-      "id": "2",
+    "measurements": [
+      {
+        "id": "1",
+        "configuration": {
+          "parameters": {
+            "register": "0x04",
+            "address": 12,
+            "slave": 7,
+            "count": 2,
+            "byte_order": "3-2-1-0",
+            "value_class": "FLOAT32"
+          },
+          "response_format": ["min", "max", "avg"]
+        }
+      },
+      {
+        "id": "2",
+        "configuration": {
+          "parameters": {
+            "register": "0x04",
+            "address": 72,
+            "slave": 1,
+            "count": 2,
+            "byte_order": "3-2-1-0",
+            "value_class": "FLOAT32"
+          },
+          "response_format": ["diff"]
+        }
+      }
+    ]
+  },
+  {
+    "id": "2",
+    "name": "Compteur 2",
+    "communication": {
       "protocol": "WebService",
       "configuration": {
         "url": "http://192.168.3.16/"
-      },
-      "measurements": [
-        {
-          "temp": {
-            "parameters": {
-              "key": "temp"
-            },
-            "response_format": ["min", "max", "avg"]
-          }
-        },
-        {
-          "hum": {
-            "response_format": ["min", "max", "avg"]
+      }
+    },
+    "measurements": [
+      {
+        "id": "3",
+        "configuration": {
+          "parameters": {
+            "key": "temp"
           },
-          "CO2": {
-            "response_format": ["min", "max", "avg"]
-          }
+          "response_format": ["min", "max", "avg"]
         }
-      ]
-    }
-  ]
-}
+      },
+      {
+        "id": "4",
+        "configuration": {
+          "parameters": {
+            "key": "hum"
+          },
+          "response_format": ["min", "max", "avg"]
+        }
+      },
+      {
+        "id": "5",
+        "configuration": {
+          "parameters": {
+            "key": "CO2"
+          },
+          "response_format": ["min", "max", "avg"]
+        }
+      }
+    ]
+  }
+]
