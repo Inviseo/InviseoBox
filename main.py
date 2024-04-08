@@ -8,6 +8,10 @@ import time
 import schedule
 from struct import pack, unpack
 
+
+
+    
+    
 format_map = {
     "FLOAT32": ("f", "2H"),
     "SINGLE": ("f", "2H"),
@@ -61,6 +65,34 @@ def decode_value(byte_order, value_class, value):
             return unpack(">h", pack("<H", value[0]))[0]
     else:
         return value[0]
+
+
+def authenticate(email, password):
+    url = "http://localhost:3000/api/auth/login"
+    payload = {
+        "email": email,
+        "password": password
+    }
+    response = requests.post(url, json=payload)
+    data = response.json()
+    if "token" in data:
+        return data["token"]
+    else:
+        return None
+
+def get_devices(token, building_id):
+    url = "http://localhost:3000/api/devices/"
+    headers = {
+        "Authorization": "Bearer " + token,
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "buildingId": building_id
+    }
+    response = requests.get(url, headers=headers, json=payload) # Utilisation de json=payload pour inclure le corps de la requête
+    return response.json()
+
+
 
 async def fetchDataFromModbusDevice(client, instrument):
     measurements=instrument["measurements"]
@@ -131,7 +163,7 @@ def fetchDataFromWebService(instrument):
         conn.commit()
         
 
-def sendMeasurementToAPI(instruments):
+def sendMeasurementToAPI(token, instruments):
     measurements_data = {"measurements": []}
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
@@ -160,48 +192,17 @@ def sendMeasurementToAPI(instruments):
                 diff_value = last_value - first_value
                 response["diff"] = str(diff_value)
             
-            measurements_data["measurements"].append({"id": measurement_id, "response": response})
+            measurements_data["measurements"].append({"id": measurement_id, "value": response})
 
-    # Si ./outputs/output1.json n'existe pas, le fichier sera créé
-    if not os.path.exists("./outputs/output1.json"):
-        with open("./outputs/output1.json", "w") as f:
-            json.dump(measurements_data, f, indent=4) 
-    else:
-        # récupérer le dernier numéro de fichier qui suit le format outputX.json
-        files = os.listdir("./outputs")
-        files = [file for file in files if file.startswith("output") and file.endswith(".json")]
-        files.sort()
-        last_file = files[-1]
-        last_file_number = int(last_file[6:-5])
-        new_file_number = last_file_number + 1
-        new_file_name = f"output{new_file_number}.json"
-        with open(f"./outputs/{new_file_name}", "w") as f:
-            json.dump(measurements_data, f, indent=4)
-
-def authenticate(email, password):
-    url = "http://localhost:3000/api/auth/login"
-    payload = {
-        "email": email,
-        "password": password
-    }
-    response = requests.post(url, json=payload)
-    data = response.json()
-    if "token" in data:
-        return data["token"]
-    else:
-        return None
-
-def get_devices(token, building_id):
-    url = "http://localhost:3000/api/devices/"
+    url = "http://localhost:3000/api/measurements/bulk"
     headers = {
         "Authorization": "Bearer " + token,
         "Content-Type": "application/json"
     }
-    payload = {
-        "buildingId": building_id
-    }
-    response = requests.get(url, headers=headers, json=payload) # Utilisation de json=payload pour inclure le corps de la requête
-    return response.json()
+    response = requests.post(url, headers=headers, json=measurements_data)
+
+    conn.close()
+
 
 
 # Fonction pour exécuter une tâche en boucle pendant 30 minutes
@@ -215,9 +216,7 @@ def run_for_30_minutes():
     c.execute("CREATE TABLE IF NOT EXISTS measurements (id INTEGER PRIMARY KEY AUTOINCREMENT, measurement_id TEXT, measurement TEXT, value REAL, date TEXT)")
     conn.commit()
 
-    # with open('./datasource.json') as f:
-    #     data = json.load(f)
-        
+
     email = "hizaaknewton@gmail.com"
     password = "amaurice"
     building_id = "660d424a69a048487ec848bb"
@@ -230,7 +229,6 @@ def run_for_30_minutes():
     else:
         print("Échec de l'authentification.")
 
-
     start_time = time.time()
     while time.time() - start_time < 60 :  # Boucle pendant 30 minutes
         # Récupération des données depuis les instruments
@@ -242,7 +240,7 @@ def run_for_30_minutes():
         time.sleep(1)  # Attente d'une seconde pour éviter une utilisation excessive du processeur
         
     # Envoi des données à l'API
-    sendMeasurementToAPI(data)
+    sendMeasurementToAPI(token, data)
 
     conn.close()
 
