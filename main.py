@@ -80,14 +80,14 @@ def authenticate(email, password):
     else:
         return None
 
-def get_devices(token, building_id):
-    url = "http://localhost:3000/api/devices/"
+def get_devices(token, worker_id):
+    url = "http://localhost:3000/api/workers/measurements"
     headers = {
         "Authorization": "Bearer " + token,
         "Content-Type": "application/json"
     }
     payload = {
-        "buildingId": building_id
+        "id": worker_id
     }
     response = requests.get(url, headers=headers, json=payload) # Utilisation de json=payload pour inclure le corps de la requête
     return response.json()
@@ -99,7 +99,7 @@ async def fetchDataFromModbusDevice(client, instrument):
     
     for measurement in measurements:
         # Récupération du nom de la mesure
-        measurement_id = measurement["id"]
+        measurement_id = measurement["_id"]
         measurement_configuration = measurement["configuration"]
         parameters = measurement_configuration["parameters"]
         # Lecture des données en fonction du registre spécifié
@@ -127,7 +127,7 @@ async def fetchDataFromModbusDevice(client, instrument):
             decoded_response = decode_value(byte_order, value_class, response.registers)
             conn = sqlite3.connect('data.db')
             c = conn.cursor()
-            c.execute("INSERT INTO measurements (measurement_id, measurement, value, date) VALUES (?, ?, ?, datetime('now'))", (instrument["id"], measurement_id, decoded_response))
+            c.execute("INSERT INTO measurements (measurement_id, measurement, value, date) VALUES (?, ?, ?, datetime('now'))", (instrument["_id"], measurement_id, decoded_response))
             conn.commit()
 
 async def run(instrument):
@@ -164,13 +164,13 @@ def fetchDataFromWebService(instrument):
         
 
 def sendMeasurementToAPI(token, instruments):
-    measurements_data = {"measurements": []}
+    measurements_data = {"fields": []}
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
     
     for instrument in instruments:
         for measurement in instrument["measurements"]:
-            measurement_id = measurement["id"]
+            measurement_id = measurement["_id"]
             measurement_configuration = measurement["configuration"]
             response = {}
 
@@ -192,13 +192,15 @@ def sendMeasurementToAPI(token, instruments):
                 diff_value = last_value - first_value
                 response["diff"] = str(diff_value)
             
-            measurements_data["measurements"].append({"id": measurement_id, "value": response})
+            measurements_data["fields"].append({"measurement": measurement_id, "value": response})
 
-    url = "http://localhost:3000/api/measurements/bulk"
+    url = "http://localhost:3000/api/fields/bulk"
     headers = {
         "Authorization": "Bearer " + token,
         "Content-Type": "application/json"
     }
+    print("Envoi des données à l'API...")
+    print(json.dumps(measurements_data, indent=4))
     response = requests.post(url, headers=headers, json=measurements_data)
 
     conn.close()
@@ -219,24 +221,27 @@ def run_for_30_minutes():
 
     email = "hizaaknewton@gmail.com"
     password = "amaurice"
-    building_id = "660d424a69a048487ec848bb"
+    worker_id = "66163e6dff59d36b9e51cf2e"
 
     # Authentification et récupération du token
     token = authenticate(email, password)
     if token:
         # Utilisation du token pour obtenir les appareils
-        data = get_devices(token, building_id)
+        data = get_devices(token, worker_id)
     else:
         print("Échec de l'authentification.")
 
+    # print data formaté en JSON
+    print("Données récupérées depuis l'API :")
+    print(json.dumps(data, indent=4))
     start_time = time.time()
     while time.time() - start_time < 60 :  # Boucle pendant 30 minutes
         # Récupération des données depuis les instruments
         for instrument in data:
             if instrument["communication"]["protocol"] == "Modbus" and instrument["communication"]["mode"] == "RTU" and instrument["communication"]["type"] == "RS-485":
                 asyncio.run(run(instrument))
-            elif instrument["communication"]["protocol"] == "WebService":
-                fetchDataFromWebService(instrument)
+            # elif instrument["communication"]["protocol"] == "WebService":
+            #     fetchDataFromWebService(instrument)
         time.sleep(1)  # Attente d'une seconde pour éviter une utilisation excessive du processeur
         
     # Envoi des données à l'API
