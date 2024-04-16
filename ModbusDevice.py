@@ -73,7 +73,13 @@ class SerialRTUModbusDevice:
         try:
             await self.client.connect()
         except Exception as e:
-            print(f"Une erreur s'est produite lors de la connexion au serveur Modbus: {e}")
+            print(f"Une erreur s'est produite lors de la connexion au client Modbus: {e}")
+    
+    async def disconnect(self):
+        try:
+            self.client.close()
+        except Exception as e:
+            print(f"Une erreur s'est produite lors de la déconnexion du client Modbus: {e}")
 
     async def read(self, register, address, count, slave, byte_order, value_class):
         try:
