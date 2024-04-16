@@ -2,3 +2,4 @@ pymodbus
 pyserial
 requests
 schedule
+python-dotenv

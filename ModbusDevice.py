@@ -28,7 +28,7 @@ format_map = {
 }
 
 
-def decode_value(byte_order, value_class, value):
+def decodeValue(byte_order, value_class, value):
     value_class_upper = value_class.upper()
     if value_class_upper in format_map:
         target_format, source_format = format_map[value_class_upper]
@@ -90,6 +90,6 @@ class SerialRTUModbusDevice:
         except Exception as e:
             # Handle the exception here, you can log it or raise a custom exception as needed
             print(f"Une erreur s'est produite lors de la lecture des données: {e}")
-        decoded_value = decode_value(byte_order, value_class, value.registers)
+        decodedValue = decodeValue(byte_order, value_class, value.registers)
 
-        return decoded_value
+        return decodedValue
