@@ -1,0 +1,95 @@
+from pymodbus import client
+from struct import pack, unpack
+
+format_map = {
+    "FLOAT32": ("f", "2H"),
+    "SINGLE": ("f", "2H"),
+    "REAL": ("f", "2H"),
+    "UNIXTIMEF32": ("f", "2H"),
+    "UINT32": ("I", "2H"),
+    "DWORD": ("I", "2H"),
+    "UNIXTIMEI32": ("I", "2H"),
+    "INT32": ("i", "2H"),
+    "FLOAT48": ("f", "3H"),
+    "INT48": ("q", "3H"),
+    "FLOAT64": ("d", "4H"),
+    "DOUBLE": ("d", "4H"),
+    "FLOAT": ("d", "4H"),
+    "LREAL": ("d", "4H"),
+    "UNIXTIMEF64": ("d", "4H"),
+    "UINT64": ("Q", "4H"),
+    "INT64": ("q", "4H"),
+    "UNIXTIMEI64": ("q", "4H"),
+    "INT16": ("h", "2H"),
+    "INT": ("h", "2H"),
+    "BCD32": ("f", "2H"),
+    "BCD24": ("f", "2H"),
+    "BCD16": ("f", "2H"),
+}
+
+
+def decode_value(byte_order, value_class, value):
+    value_class_upper = value_class.upper()
+    if value_class_upper in format_map:
+        target_format, source_format = format_map[value_class_upper]
+        if source_format == "2H":
+            value = value[0], value[1]
+        elif source_format == "3H":
+            value = 0, value[0], value[1], value[2]
+
+        if byte_order == "1-0-3-2":
+            return unpack(target_format, pack(source_format, *value))[0]
+        elif byte_order == "3-2-1-0":
+            return unpack(target_format, pack(source_format, *reversed(value)))[0]
+        elif byte_order == "0-1-2-3":
+            value = [unpack(">H", pack("<H", v))[0] for v in value]
+            return unpack(target_format, pack(source_format, *value))[0]
+        elif byte_order == "2-3-0-1":
+            value = [unpack(">H", pack("<H", v))[0] for v in reversed(value)]
+            return unpack(target_format, pack(source_format, *value))[0]
+
+    elif value_class_upper in ["INT16", "INT"]:
+        if byte_order in ["1-0-3-2", "3-2-1-0"]:
+            return unpack("h", pack("H", value[0]))[0]
+        else:
+            return unpack(">h", pack("<H", value[0]))[0]
+    else:
+        return value[0]
+
+
+class SerialRTUModbusDevice:
+    def __init__(self, port, baudrate, stopbits, bytesize, parity):
+        self.client = client.AsyncModbusSerialClient(
+            method="rtu",
+            port=port,
+            stopbits=stopbits,
+            bytesize=bytesize,
+            parity=parity,
+            baudrate=baudrate,
+            timeout=1,
+        )
+
+    async def connect(self):
+        try:
+            await self.client.connect()
+        except Exception as e:
+            print(f"Une erreur s'est produite lors de la connexion au serveur Modbus: {e}")
+
+    async def read(self, register, address, count, slave, byte_order, value_class):
+        try:
+            if register == "0x01":
+                value = await self.client.read_coils(address, count, slave)
+            elif register == "0x02":
+                value = await self.client.read_discrete_inputs(address, count, slave)
+            elif register == "0x03":
+                value = await self.client.read_holding_registers(address, count, slave)
+            elif register == "0x04":
+                value = await self.client.read_input_registers(address, count, slave)
+            else:
+                raise ValueError("Code de registre non reconnu")
+        except Exception as e:
+            # Handle the exception here, you can log it or raise a custom exception as needed
+            print(f"Une erreur s'est produite lors de la lecture des données: {e}")
+        decoded_value = decode_value(byte_order, value_class, value.registers)
+
+        return decoded_value
