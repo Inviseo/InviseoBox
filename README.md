@@ -44,13 +44,10 @@ sudo systemctl daemon-reload
 sudo systemctl start inviseo
 ```
 
+# Un script d'installation pour automatiser l'installation
+
 # RESTE A FAIRE
 
-- [x] Interpréter correctement les données
-- [x] Assurer la boucle de récupération des données
-- [ ] Gestion des erreurs
-- [ ] Transformer les instruments en classes
-- [ ] Faire le call à l'API
 - [ ] Réaliser les tests (unitaire, d'intégration, de bout en bout)
 - [ ] Gestion des logs
 - [ ] Permettre un script pour pull automatiquement le code
