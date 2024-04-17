@@ -5,21 +5,7 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-if [ ! -f .env ]; then
-    echo "# Production
-url_prod=\"https://inviseo.fr/api\"
 
-# Development
-url_dev=\"http://192.168.3.23:3000/api\"
-
-# Authentification
-email=\"hizaaknewton@gmail.com\"
-password=\"amaurice\"
-worker_id=\"$1\"" > .env
-    echo "Le fichier .env a été créé avec succès."
-else
-    echo "Le fichier .env existe déjà."
-fi
 
 # Fonction pour vérifier la connectivité Internet
 check_internet() {
@@ -53,6 +39,8 @@ ExecStart=/usr/bin/bash $dir/install.sh
 WantedBy=multi-user.target" > /etc/systemd/system/inviseo.service
 
     systemctl enable inviseo
+
+    echo "Le service a été créé avec succès"
     # Ne pas démarrer le service ici, il sera démarré après l'installation
 else
     echo "Le service existe déjà"
@@ -70,8 +58,20 @@ git clone "https://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@github.com/inviseo/i
     exit 1
 }
 
-# Copier le fichier .env dans le dossier inviseobox
-cp .env inviseobox/
+
+if [ ! -f .env ]; then
+    echo "# Production
+url_prod=\"https://inviseo.fr/api\"
+
+# Development
+url_dev=\"http://192.168.3.23:3000/api\"
+
+# Authentification
+email=\"hizaaknewton@gmail.com\"
+password=\"amaurice\"
+worker_id=\"$1\"" > inviseobox/.env
+    echo "Le fichier .env a été créé avec succès."
+fi
 
 cd inviseobox || {
     echo "Le dossier inviseobox n'existe pas."
