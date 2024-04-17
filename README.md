@@ -6,7 +6,7 @@ Un service léger et non-intrusif installé le client pour récupérer et envoye
 Il suffit normalement d'exécuter cette ligne de commande :
 
 ```bash
-curl -sSL -H "Authorization: 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" https://raw.githubusercontent.com/inviseo/inviseobox/main/install.sh | sudo bash <worder-id>
+curl -sSL https://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@raw.githubusercontent.com/inviseo/inviseobox/main/install.sh | sudo bash -s <worder-id>
 ```
 
 En précisant le `<worder-id>` de la box à installer.
