@@ -61,7 +61,7 @@ async def scheduled_main_loop(url, email, password, worker_id):
     devices = get_devices(url, token, worker_id)
 
     
-    while time.time() - start_time < 10:
+    while time.time() - start_time < 9:
         for device in devices:
             if device["communication"]["protocol"] == "Modbus":
                 if device["communication"]["mode"] == "RTU":
@@ -75,11 +75,15 @@ async def scheduled_main_loop(url, email, password, worker_id):
                     await modbus_device.disconnect()
             if device["communication"]["protocol"] == "WebService":
                 web_service_device = WebServiceDevice(device["communication"]["configuration"]["url"])
-                data = web_service_device.getData()
-                for measurement in device["measurements"]:
-                    value = data[measurement["configuration"]["parameters"]["key"]]
-                    database.insert_data(measurement["_id"], value)
-
+                try:
+                    data = web_service_device.getData()
+                    for measurement in device["measurements"]:
+                        value = data[measurement["configuration"]["parameters"]["key"]]
+                        database.insert_data(measurement["_id"], value)
+                except Exception as e:
+                    # On ne veut pas que le programme s'arrête si une erreur se produit
+                    print(f"Une erreur s'est produite lors de la récupération des données: {e}")
+                    
     # Envoi des données à l'API
     fields_data = {"fields": []}
 
@@ -113,14 +117,13 @@ async def scheduled_main_loop(url, email, password, worker_id):
 async def main_execution_thread():
     try:
         load_dotenv()
-        url = os.getenv("url_dev")
+        url = os.getenv("url_prod")
         email = os.getenv("email")
         password = os.getenv("password")
         worker_id = os.getenv("worker_id")
 
         while True:
             await scheduled_main_loop(url, email, password, worker_id)
-            await asyncio.sleep(10)  # Attendre 10 secondes avant de recommencer
     except Exception as e:
         print(f"Une erreur s'est produite lors de l'exécution du programme: {e}")
 
