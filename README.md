@@ -42,22 +42,7 @@ source venv/bin/activate
 python main.py
 ```
 
-## Installation en environnement de production
-
-Un fichier `inviseo.service` est fourni pour installer le service sur un système Linux. Il a été prévu que ce dépôt soit cloné dans le dossier `/home/user/inviseo-box` et que le service soit lancé par l'utilisateur `user`.
-
-Les commandes suivantes permettent d'installer le service :
-```bash
-sudo cp inviseo.service /etc/systemd/system/
-sudo systemctl enable inviseo
-sudo systemctl daemon-reload
-sudo systemctl start inviseo
-```
-
-# Un script d'installation pour automatiser l'installation
-
 # RESTE A FAIRE
 
 - [ ] Réaliser les tests (unitaire, d'intégration, de bout en bout)
 - [ ] Gestion des logs
-- [ ] Permettre un script pour pull automatiquement le code
