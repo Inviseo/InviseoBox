@@ -64,7 +64,7 @@ if [ ! -f .env ]; then
 url_prod=\"https://inviseo.fr/api\"
 
 # Development
-url_dev=\"http://192.168.3.23:3000/api\"
+url_dev=\"http://192.168.3.82:3000/api\"
 
 # Authentification
 email=\"hizaaknewton@gmail.com\"
