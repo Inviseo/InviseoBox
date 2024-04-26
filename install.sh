@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Vérifier que le script est exécuté avec un utilisateur qui a les droits sudo
+if [ "$EUID" -ne 0 ]; then
+    echo "Veuillez exécuter ce script avec les droits sudo."
+    exit 1
+fi
+
 # Fonction pour vérifier la connectivité Internet
 check_internet() {
     while true; do
