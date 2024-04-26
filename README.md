@@ -7,7 +7,7 @@ Un service léger et non-intrusif installé sur le client pour récupérer et en
 Il suffit d'exécuter cette ligne de commande :
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/inviseo/inviseobox/main/install.sh | sudo bash -s <worder-id>
+curl -H "Authorization: token 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" -sSL https://raw.githubusercontent.com/inviseo/inviseobox/main/install.sh | sudo bash -s <worder-id>
 ```
 
 En précisant le `<worder-id>` de la box à installer, obtenu lors de la création de la box sur le serveur Inviseo.
