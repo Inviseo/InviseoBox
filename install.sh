@@ -1,12 +1,5 @@
 #!/bin/bash
 
-if [ -z "$1" ]; then
-    echo "Veuillez spécifier le worker_id en paramètre."
-    exit 1
-fi
-
-
-
 # Fonction pour vérifier la connectivité Internet
 check_internet() {
     while true; do
@@ -23,6 +16,22 @@ check_internet() {
 # dir = répertoire actuel
 dir=$(pwd)
 
+# Si aucun paramètre n'est passé lors de l'appel du script
+if [ -z "$1" ]; then
+    # Si le fichier "worker_id.txt" n'existe pas
+    if [ ! -f "worker_id.txt" ]; then
+        echo "Le fichier worker_id.txt n'existe pas. Veuillez saisir le worker_id :"
+        read worker_id
+        echo "$worker_id" > worker_id.txt
+    else
+        # Sinon, récupérer le worker_id depuis le fichier
+        worker_id=$(cat worker_id.txt)
+    fi
+else
+    # Si un paramètre est passé, mettre à jour le fichier "worker_id.txt" ou le créer
+    echo "$1" > worker_id.txt
+    worker_id="$1"
+fi
 
 # Si le service n'existe pas, le créer
 if [ ! -f /etc/systemd/system/inviseo.service ]; then
@@ -69,7 +78,7 @@ url_dev=\"http://localhost:3000\"
 # Authentification
 email=\"hizaaknewton@gmail.com\"
 password=\"amaurice\"
-worker_id=\"$1\"" > inviseobox/.env
+worker_id=\"$worker_id\"" > inviseobox/.env
     echo "Le fichier .env a été créé avec succès."
 fi
 
