@@ -61,7 +61,7 @@ async def scheduled_main_loop(url, email, password, worker_id):
     devices = get_devices(url, token, worker_id)
 
     
-    while time.time() - start_time < 9:
+    while time.time() - start_time < 1800:
         for device in devices:
             if device["communication"]["protocol"] == "Modbus":
                 if device["communication"]["mode"] == "RTU":
@@ -117,7 +117,7 @@ async def scheduled_main_loop(url, email, password, worker_id):
 async def main_execution_thread():
     try:
         load_dotenv()
-        url = os.getenv("url_dev")
+        url = os.getenv("url_prod")
         email = os.getenv("email")
         password = os.getenv("password")
         worker_id = os.getenv("worker_id")

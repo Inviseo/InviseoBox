@@ -61,10 +61,10 @@ git clone "https://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@github.com/inviseo/i
 
 if [ ! -f .env ]; then
     echo "# Production
-url_prod=\"https://inviseo.fr/api\"
+url_prod=\"https://client.inviseo.fr/api\"
 
 # Development
-url_dev=\"http://192.168.3.82:3000/api\"
+url_dev=\"http://localhost:3000\"
 
 # Authentification
 email=\"hizaaknewton@gmail.com\"
