@@ -33,7 +33,7 @@ After=network.target
 [Service]
 User=root
 WorkingDirectory=$dir
-ExecStart=/usr/bin/bash $dir/install.sh
+ExecStart=/usr/bin/bash $dir/inviseobox/install.sh
 
 [Install]
 WantedBy=multi-user.target" > /etc/systemd/system/inviseo.service
