@@ -9,5 +9,6 @@ class WebServiceDevice:
             response = requests.get(self.url)
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
-            raise SystemExit(err)
+            print(err)
+            response = {}
         return response.json()
