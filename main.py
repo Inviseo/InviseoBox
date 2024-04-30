@@ -117,7 +117,7 @@ async def scheduled_main_loop(url, email, password, worker_id):
 async def main_execution_thread():
     try:
         load_dotenv()
-        url = os.getenv("url_prod")
+        url = os.getenv("url")
         email = os.getenv("email")
         password = os.getenv("password")
         worker_id = os.getenv("worker_id")
