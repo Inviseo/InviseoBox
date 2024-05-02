@@ -47,6 +47,7 @@ After=network.target
 
 [Service]
 User=root
+Restart=always
 WorkingDirectory=$dir
 ExecStart=/usr/bin/bash $dir/inviseobox/install.sh
 
@@ -99,6 +100,6 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Lancer le worker
-sudo python main.py > "$dir/inviseobox.log" 2>&1
+sudo python main.py
 
 echo "Installation terminée"
