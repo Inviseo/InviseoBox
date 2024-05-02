@@ -45,8 +45,3 @@ Il est nécessaire d'activer l'environnement virtuel avant d'exécuter le progra
 source venv/bin/activate
 python main.py
 ```
-
-## 📝 RESTE À FAIRE
-
-- [ ] Réaliser les tests (unitaires, d'intégration, de bout en bout)
-- [ ] Gestion des logs
