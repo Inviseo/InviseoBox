@@ -1,6 +1,7 @@
 import sqlite3
 import os
 from Logger import Logger
+import time
 
 class SQLiteDatabase:
     def __init__(self, db_name, logger=Logger()):
@@ -27,8 +28,9 @@ class SQLiteDatabase:
             # TABLE fields
             # measurement: ID de la mesure (issue de MongoDB)
             # value: Valeur de la mesure
+            # date: Date de la mesure, gérée par SQLite
             self.cursor.execute(
-                "CREATE TABLE IF NOT EXISTS fields (measurement TEXT, value REAL)"
+                "CREATE TABLE IF NOT EXISTS fields (measurement TEXT, value REAL, date TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
             )
 
             self.connection.commit()
