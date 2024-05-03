@@ -12,6 +12,15 @@ curl -H "Authorization: token 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" -sSL htt
 
 En précisant le `<worder-id>` de la box à installer, obtenu lors de la création de la box sur le serveur Inviseo.
 
+### 📝 Logs
+
+Les logs sont stockés dans ``./inviseobox.log``.
+Pour les consulter, vous pouvez utiliser la commande suivante :
+
+```bash
+tail -f inviseobox.log
+```
+
 ## 🛠️ Installation (Développement)
 
 Installer les dépendances :

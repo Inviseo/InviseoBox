@@ -79,8 +79,8 @@ if [ ! -f .env ]; then
     echo "url=\"https://client.inviseo.fr/api\"
 
 # Authentification
-email=\"hizaaknewton@gmail.com\"
-password=\"amaurice\"
+email=\"vincent@inviseo.fr\"
+password=\"runf86lq\"
 worker_id=\"$worker_id\"" > inviseobox/.env
     echo "Le fichier .env a été créé avec succès."
 fi
@@ -99,7 +99,19 @@ source venv/bin/activate
 # Installer les dépendances
 pip install -r requirements.txt
 
+echo "Installation terminée. Vous pourrez constater que la InvixéoBox est bien connectée via l'interface web :
+https://client.inviseo.fr/
+
+Un délai de 30 minutes est nécessaire pour que les données soient visibles sur la plateforme."
+
+if [ -z "$1" ]; then
+    echo "Redémarrage de la machine dans 5 secondes..."
+    for i in {5..1}; do
+        echo "$i..."
+        sleep 1
+    done
+    reboot
+fi
+
 # Lancer le worker
 sudo python main.py
-
-echo "Installation terminée"

@@ -1,5 +1,6 @@
 from pymodbus import client
 from struct import pack, unpack
+from Logger import Logger
 
 format_map = {
     "FLOAT32": ("f", "2H"),
@@ -58,7 +59,7 @@ def decodeValue(byte_order, value_class, value):
 
 
 class SerialRTUModbusDevice:
-    def __init__(self, port, baudrate, stopbits, bytesize, parity):
+    def __init__(self, port, baudrate, stopbits, bytesize, parity, logger=Logger()):
         self.client = client.AsyncModbusSerialClient(
             method="rtu",
             port=port,
@@ -68,18 +69,19 @@ class SerialRTUModbusDevice:
             baudrate=baudrate,
             timeout=1,
         )
+        self.logger = logger
 
     async def connect(self):
         try:
             await self.client.connect()
         except Exception as e:
-            print(f"Une erreur s'est produite lors de la connexion au client Modbus: {e}")
+            self.logger.log_error(f"[ModbusDevice.py] Une erreur s'est produite lors de la connexion du client Modbus: {e}")
     
     async def disconnect(self):
         try:
             self.client.close()
         except Exception as e:
-            print(f"Une erreur s'est produite lors de la déconnexion du client Modbus: {e}")
+            self.logger.log_error(f"[ModbusDevice.py] Une erreur s'est produite lors de la déconnexion du client Modbus: {e}")
 
     async def read(self, register, address, count, slave, byte_order, value_class):
         try:
@@ -92,10 +94,15 @@ class SerialRTUModbusDevice:
             elif register == "0x04":
                 value = await self.client.read_input_registers(address, count, slave)
             else:
-                raise ValueError("Code de registre non reconnu")
+                self.logger.log_error(f"[ModbusDevice.py] Le registre {register} n'est pas supporté")
+                return None
         except Exception as e:
-            # Handle the exception here, you can log it or raise a custom exception as needed
-            print(f"Une erreur s'est produite lors de la lecture des données: {e}")
-        decodedValue = decodeValue(byte_order, value_class, value.registers)
+            self.logger.log_error(f"[ModbusDevice.py] Une erreur s'est produite lors de la lecture des registres Modbus: {e}")
+            return None
+        try:
+            decodedValue = decodeValue(byte_order, value_class, value.registers)
+        except Exception as e:
+            self.logger.log_error(f"[ModbusDevice.py] Une erreur s'est produite lors du décodage de la valeur: {e}")
+            return None
 
         return decodedValue
