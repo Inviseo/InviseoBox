@@ -114,7 +114,7 @@ if [ "$response" = "o" ]; then
         echo "$i..."
         sleep 1
     done
-    reboot
+    sudo reboot
 fi
 
 # Lancer le worker
