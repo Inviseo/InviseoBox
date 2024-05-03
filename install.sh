@@ -104,7 +104,11 @@ https://client.inviseo.fr/
 
 Un délai de 30 minutes est nécessaire pour que les données soient visibles sur la plateforme."
 
-if [ ! -z "$1" ]; then
+# On demande à l'utilisateur s'il souhaite redémarrer la machine
+echo "Voulez-vous redémarrer la machine maintenant ? (o/n)"
+read -r response
+
+if [ "$response" = "o" ]; then
     echo "Redémarrage de la machine dans 5 secondes..."
     for i in {5..1}; do
         echo "$i..."
