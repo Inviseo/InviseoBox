@@ -164,6 +164,8 @@ async def scheduled_main_loop(api, devices):
                 try:
                     first_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY date ASC LIMIT 1")[0][0]
                     last_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY date DESC LIMIT 1")[0][0]
+                    print("first_value", first_value)
+                    print("last_value", last_value)
                     diff_value = last_value - first_value
                     response["diff"] = diff_value
                 except Exception as e:
