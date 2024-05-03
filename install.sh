@@ -99,23 +99,14 @@ source venv/bin/activate
 # Installer les dépendances
 pip install -r requirements.txt
 
-echo "Installation terminée. Vous pourrez constater que la InvixéoBox est bien connectée via l'interface web :
+echo "
+Installation terminée. Vous pourrez constater que la InvixéoBox est bien connectée via l'interface web :
 https://client.inviseo.fr/
 
-Un délai de 30 minutes est nécessaire pour que les données soient visibles sur la plateforme."
-
-# On demande à l'utilisateur s'il souhaite redémarrer la machine
-echo "Voulez-vous redémarrer la machine maintenant ? (o/n)"
-read -r response
-
-if [ "$response" = "o" ]; then
-    echo "Redémarrage de la machine dans 5 secondes..."
-    for i in {5..1}; do
-        echo "$i..."
-        sleep 1
-    done
-    sudo reboot
-fi
+Un délai de 30 minutes est nécessaire pour que les données soient visibles sur la plateforme.
+Veuillez redémarrer la machine pour que le service soit démarré automatiquement :
+CTRL + C
+sudo reboot"
 
 # Lancer le worker
 sudo python main.py
