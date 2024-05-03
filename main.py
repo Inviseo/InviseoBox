@@ -42,7 +42,7 @@ async def scheduled_main_loop(api, devices):
     except Exception as e:
         logger.log_error(f"[main.py] - Une erreur s'est produite lors de la récupération des appareils: {e}")
     
-    while time.time() - start_time < 10:
+    while time.time() - start_time < 1800:
         for device in devices:
             if device["communication"]["protocol"] == "Modbus":
                 if device["communication"]["mode"] == "RTU":
@@ -92,7 +92,8 @@ async def scheduled_main_loop(api, devices):
     for device in devices:
         device_id = device["_id"]
         
-        device_status_list = database.execute(f"SELECT status FROM measurements WHERE _id = '{device_id}'")
+        device_status_list = database.execute(f"SELECT status FROM devices WHERE _id = '{device_id}'")
+        device_status_list = [status[0] for status in device_status_list]
         # S'il n'y a QUE des "ok", alors le statut de l'appareil est "ok"
         if all(status == "ok" for status in device_status_list):
             device_status = "ok"
@@ -107,6 +108,7 @@ async def scheduled_main_loop(api, devices):
         for measurement in device["measurements"]:
             measurement_id = measurement["_id"]
             measurements_status_list = database.execute(f"SELECT status FROM measurements WHERE _id = '{measurement_id}'")
+            measurements_status_list = [status[0] for status in measurements_status_list]
             # S'il n'y a QUE des "ok", alors le statut de la mesure est "ok"
             if all(status == "ok" for status in measurements_status_list):
                 measurement_status = "ok"
@@ -123,8 +125,6 @@ async def scheduled_main_loop(api, devices):
     devices_status_to_send.append(devices_status)
     try:
         for status in devices_status_to_send:
-            import json
-            print(json.dumps(status, indent=4))
             api.send_devices_status(status)
             devices_status_to_send.remove(status)
     except Exception as e:
@@ -182,8 +182,6 @@ async def scheduled_main_loop(api, devices):
     fields_to_send.append(fields)
     try:
         for field in fields_to_send:
-            import json
-            print(json.dumps(field, indent=4))
             api.send_fields(field)
             fields_to_send.remove(field)
     except Exception as e:

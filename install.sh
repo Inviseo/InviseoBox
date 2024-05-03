@@ -79,8 +79,8 @@ if [ ! -f .env ]; then
     echo "url=\"https://client.inviseo.fr/api\"
 
 # Authentification
-email=\"hizaaknewton@gmail.com\"
-password=\"amaurice\"
+email=\"vincent@inviseo.fr\"
+password=\"runf86lq\"
 worker_id=\"$worker_id\"" > inviseobox/.env
     echo "Le fichier .env a été créé avec succès."
 fi

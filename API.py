@@ -55,10 +55,10 @@ class API:
             except requests.exceptions.RequestException as e:
                 self.logger.log_error(f"[API.py] - Une erreur s'est produite lors de la récupération des appareils: {e}")
 
-    def send_devices_status(self, devices, status):
+    def send_devices_status(self, status):
         try:
             headers = {"Authorization": "Bearer " + self.token, "Content-Type": "application/json"}
-            response = requests.post(f"{self.url}/devices/status", headers=headers, json={"devices": devices, "status": status})
+            response = requests.post(f"{self.url}/devices/status", headers=headers, json=status)
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
             self.logger.log_error(f"[API.py] - Une erreur s'est produite lors de l'enregistrement du statut des appareils: {e}")
@@ -68,11 +68,11 @@ class API:
             self.logger.log_error("[API.py] - Trop de redirections lors de l'enregistrement du statut des appareils (URL incorrecte)")
         except requests.exceptions.RequestException as e:
             self.logger.log_error(f"[API.py] - Une erreur s'est produite lors de l'enregistrement du statut des appareils: {e}")
-            
-    def send_fields(self, fields_data):
+
+    def send_fields(self, fields):
         try:
             headers = {"Authorization": "Bearer " + self.token, "Content-Type": "application/json"}
-            response = requests.post(f"{self.url}/fields/bulk", headers=headers, json=fields_data)
+            response = requests.post(f"{self.url}/fields/bulk", headers=headers, json=fields)
             response.raise_for_status()
         except requests.exceptions.HTTPError as e:
             self.logger.log_error(f"[API.py] - Une erreur s'est produite lors de l'envoi des données: {e}")

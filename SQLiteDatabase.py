@@ -16,13 +16,13 @@ class SQLiteDatabase:
             # _id: UUID de l'appareil (issue de MongoDB)
             # status: Statut de l'appareil (ok, dead)
             self.cursor.execute(
-                "CREATE TABLE IF NOT EXISTS devices (_id TEXT PRIMARY KEY, status TEXT)"
+                "CREATE TABLE IF NOT EXISTS devices (_id TEXT, status TEXT)"
             )
             # TABLE measurements
             # id: UUID de la mesure (issue de MongoDB)
             # status: Statut de la mesure (ok, dead)
             self.cursor.execute(
-                "CREATE TABLE IF NOT EXISTS measurements (_id TEXT PRIMARY KEY, status TEXT)"
+                "CREATE TABLE IF NOT EXISTS measurements (_id TEXT, status TEXT)"
             )
             # TABLE fields
             # measurement: ID de la mesure (issue de MongoDB)
@@ -43,14 +43,14 @@ class SQLiteDatabase:
 
     def insert_device(self, device_id, status):
         try:
-            self.cursor.execute("INSERT OR REPLACE INTO devices (_id, status) VALUES (?, ?)", (device_id, status))
+            self.cursor.execute("INSERT INTO devices (_id, status) VALUES (?, ?)", (device_id, status))
             self.connection.commit()
         except sqlite3.Error as e:
             self.logger.log_error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de l'insertion ou de la mise à jour de l'appareil: {e}")
     
     def insert_measurement(self, measurement_id, status):
         try:
-            self.cursor.execute("INSERT OR REPLACE INTO measurements (_id, status) VALUES (?, ?)", (measurement_id, status))
+            self.cursor.execute("INSERT INTO measurements (_id, status) VALUES (?, ?)", (measurement_id, status))
             self.connection.commit()
         except sqlite3.Error as e:
             self.logger.log_error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de l'insertion ou de la mise à jour de la mesure: {e}")
