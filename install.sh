@@ -104,7 +104,7 @@ https://client.inviseo.fr/
 
 Un délai de 30 minutes est nécessaire pour que les données soient visibles sur la plateforme."
 
-if [ -z "$1" ]; then
+if [ ! -z "$1" ]; then
     echo "Redémarrage de la machine dans 5 secondes..."
     for i in {5..1}; do
         echo "$i..."
