@@ -162,8 +162,8 @@ async def scheduled_main_loop(api, devices):
 
             if "diff" in measurement_configuration["response_format"]:
                 try:
-                    first_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY date ASC LIMIT 1")[0][0]
-                    last_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY date DESC LIMIT 1")[0][0]
+                    first_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY timestamp ASC LIMIT 1")[0][0]
+                    last_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY timestamp DESC LIMIT 1")[0][0]
                     diff_value = last_value - first_value
                     response["diff"] = diff_value
                 except Exception as e:
@@ -173,11 +173,11 @@ async def scheduled_main_loop(api, devices):
             # Sinon, on ne l'ajoute pas
             if "min" in response:
                 if response["min"] is not None:
-                    # "date" au format ISO 8601
-                    fields["fields"].append({"measurement": measurement_id, "value": response, "date": time.strftime("%Y-%m-%dT%H:%M:%S")})
+                    # "timestamp" au format ISO 8601
+                    fields["fields"].append({"measurement": measurement_id, "value": response, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
             if "diff" in response:
                 if response["diff"] is not None:
-                    fields["fields"].append({"measurement": measurement_id, "value": response, "date": time.strftime("%Y-%m-%dT%H:%M:%S")})
+                    fields["fields"].append({"measurement": measurement_id, "value": response, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
 
     fields_to_send.append(fields)
     try:
