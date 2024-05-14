@@ -24,14 +24,14 @@ devices_status_to_send = []
 fields_to_send = []
 
 async def scheduled_main_loop(api, devices):
-    logger.log_info("[main.py] - Début de la boucle principale")
+    logger.info("[main.py] - Début de la boucle principale")
     start_time = time.time()
     
     # Récupération du token d'authentification
     try:
         api.get_token()
     except Exception as e:
-        logger.log_error(f"[main.py] - Une erreur s'est produite lors de la récupération du token d'authentification: {e}")
+        logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération du token d'authentification: {e}")
     
     # Création de la base de données
     database = SQLiteDatabase("data.db")
@@ -40,7 +40,7 @@ async def scheduled_main_loop(api, devices):
     try:
         devices = api.get_devices()
     except Exception as e:
-        logger.log_error(f"[main.py] - Une erreur s'est produite lors de la récupération des appareils: {e}")
+        logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération des appareils: {e}")
     
     while time.time() - start_time < 1800:
         for device in devices:
@@ -56,17 +56,17 @@ async def scheduled_main_loop(api, devices):
                                 database.insert_data(measurement["_id"], value)
                                 database.insert_measurement(measurement["_id"], "ok")
                             except Exception as e:
-                                logger.log_error(f"[main.py] - Une erreur s'est produite lors de la lecture des données Modbus: {e}")
+                                logger.warning(f"[main.py] - Une erreur s'est produite lors de la lecture des données Modbus: {e}")
                                 database.insert_measurement(measurement["_id"], "dead")
                                 time.sleep(1)
                     except Exception as e:
-                        logger.log_error(f"[main.py] - Une erreur s'est produite lors de la connexion de l'appareil Modbus: {e}")
+                        logger.warning(f"[main.py] - Une erreur s'est produite lors de la connexion de l'appareil Modbus: {e}")
                         database.insert_device(device["_id"], "dead")
                         time.sleep(1)
                     try:
                         await modbus_device.disconnect()
                     except Exception as e:
-                        logger.log_error(f"[main.py] - Une erreur s'est produite lors de la déconnexion de l'appareil Modbus: {e}")
+                        logger.error(f"[main.py] - Une erreur s'est produite lors de la déconnexion de l'appareil Modbus: {e}")
             if device["communication"]["protocol"] == "WebService":
                 web_service_device = WebServiceDevice(device["communication"]["configuration"]["url"])
                 try:
@@ -78,11 +78,11 @@ async def scheduled_main_loop(api, devices):
                             database.insert_data(measurement["_id"], value)
                             database.insert_measurement(measurement["_id"], "ok")
                         except Exception as e:
-                            logger.log_error(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web: {e}")
+                            logger.warning(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web: {e}")
                             database.insert_measurement(measurement["_id"], "dead")
                             time.sleep(1)
                 except Exception as e:
-                    logger.log_error(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web: {e}")
+                    logger.warning(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web: {e}")
                     database.insert_device(device["_id"], "dead")
                     time.sleep(1)
                     
@@ -128,7 +128,7 @@ async def scheduled_main_loop(api, devices):
             api.send_devices_status(status)
             devices_status_to_send.remove(status)
     except Exception as e:
-        logger.log_error(f"[main.py] - Une erreur s'est produite lors de l'envoi de l'état des appareils: {e}")
+        logger.error(f"[main.py] - Une erreur s'est produite lors de l'envoi de l'état des appareils: {e}")
 
     # Envoi des champs (fields) à l'API
     fields = {"fields": []}
@@ -144,21 +144,21 @@ async def scheduled_main_loop(api, devices):
                     min_value = database.execute(f"SELECT MIN(value) FROM fields WHERE measurement = '{measurement_id}'")[0][0]
                     response["min"] = min_value
                 except Exception as e:
-                    logger.log_error(f"[main.py] - Une erreur s'est produite lors de la récupération de la valeur minimale: {e}")
+                    logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération de la valeur minimale: {e}")
 
             if "max" in measurement_configuration["response_format"]:
                 try:
                     max_value = database.execute(f"SELECT MAX(value) FROM fields WHERE measurement = '{measurement_id}'")[0][0]
                     response["max"] = max_value
                 except Exception as e:
-                    logger.log_error(f"[main.py] - Une erreur s'est produite lors de la récupération de la valeur maximale: {e}")
+                    logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération de la valeur maximale: {e}")
 
             if "avg" in measurement_configuration["response_format"]:
                 try:
                     avg_value = database.execute(f"SELECT AVG(value) FROM fields WHERE measurement = '{measurement_id}'")[0][0]
                     response["avg"] = avg_value
                 except Exception as e:
-                    logger.log_error(f"[main.py] - Une erreur s'est produite lors de la récupération de la valeur moyenne: {e}")
+                    logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération de la valeur moyenne: {e}")
 
             if "diff" in measurement_configuration["response_format"]:
                 try:
@@ -167,7 +167,7 @@ async def scheduled_main_loop(api, devices):
                     diff_value = last_value - first_value
                     response["diff"] = diff_value
                 except Exception as e:
-                    logger.log_error(f"[main.py] - Une erreur s'est produite lors de la récupération de la différence de valeur: {e}")
+                    logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération de la différence de valeur: {e}")
 
             # Ici, si la valeur de la mesure est un nombre, on peut ajouter la mesure à la liste des champs à envoyer à l'API
             # Sinon, on ne l'ajoute pas
@@ -185,9 +185,12 @@ async def scheduled_main_loop(api, devices):
             api.send_fields(field)
             fields_to_send.remove(field)
     except Exception as e:
-        logger.log_error(f"[main.py] - Une erreur s'est produite lors de l'envoi des champs: {e}")
+        logger.error(f"[main.py] - Une erreur s'est produite lors de l'envoi des champs: {e}")
 
-    await scheduled_main_loop(api, devices)
+    try:
+        await scheduled_main_loop(api, devices)
+    except Exception as e:
+        logger.error(f"[main.py] - Une erreur s'est produite lors de l'exécution de la boucle principale: {e}")
 
 
 async def main_execution_thread():
@@ -197,14 +200,14 @@ async def main_execution_thread():
         api.get_token()
         devices = api.get_devices()
     except Exception as e:
-        logger.log_error(f"[main.py] - Une erreur s'est produite lors de l'initialisation de l'API: {e}")
+        logger.error(f"[main.py] - Une erreur s'est produite lors de l'initialisation de l'API: {e}")
         time.sleep(5)
         await main_execution_thread()
     
     try:
         await scheduled_main_loop(api, devices)
     except Exception as e:
-        logger.log_error(f"[main.py] - Une erreur s'est produite lors de l'exécution de la boucle principale: {e}")
+        logger.error(f"[main.py] - Une erreur s'est produite lors de l'exécution de la boucle principale: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main_execution_thread())

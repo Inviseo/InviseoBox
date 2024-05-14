@@ -35,34 +35,34 @@ class SQLiteDatabase:
 
             self.connection.commit()
         except sqlite3.Error as e:
-            self.logger.log_error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de la connexion à la base de données: {e}")
+            self.logger.error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de la connexion à la base de données: {e}")
 
     def __del__(self):
         try:
             self.connection.close()
         except sqlite3.Error as e:
-            self.logger.log_error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de la fermeture de la base de données: {e}")
+            self.logger.error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de la fermeture de la base de données: {e}")
 
     def insert_device(self, device_id, status):
         try:
             self.cursor.execute("INSERT INTO devices (_id, status) VALUES (?, ?)", (device_id, status))
             self.connection.commit()
         except sqlite3.Error as e:
-            self.logger.log_error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de l'insertion ou de la mise à jour de l'appareil: {e}")
+            self.logger.error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de l'insertion ou de la mise à jour de l'appareil: {e}")
     
     def insert_measurement(self, measurement_id, status):
         try:
             self.cursor.execute("INSERT INTO measurements (_id, status) VALUES (?, ?)", (measurement_id, status))
             self.connection.commit()
         except sqlite3.Error as e:
-            self.logger.log_error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de l'insertion ou de la mise à jour de la mesure: {e}")
+            self.logger.error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de l'insertion ou de la mise à jour de la mesure: {e}")
 
     def insert_data(self, measurement, value):
         try:
             self.cursor.execute("INSERT INTO fields (measurement, value) VALUES (?, ?)", (measurement, value))
             self.connection.commit()
         except sqlite3.Error as e:
-            self.logger.log_error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de l'insertion des données: {e}")
+            self.logger.error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de l'insertion des données: {e}")
 
     def execute(self, query):
         try:
@@ -70,5 +70,5 @@ class SQLiteDatabase:
             self.connection.commit()
             return self.cursor.fetchall()
         except sqlite3.Error as e:
-            self.logger.log_error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de l'exécution de la requête: {e}")
+            self.logger.error(f"[SQLiteDatabase.py] - Une erreur s'est produite lors de l'exécution de la requête: {e}")
             return None

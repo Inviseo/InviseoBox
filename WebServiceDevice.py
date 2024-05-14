@@ -12,16 +12,16 @@ class WebServiceDevice:
             response.raise_for_status()
 
         except requests.exceptions.HTTPError as e:
-            self.logger.log_error(f"[WebServiceDevice.py] - Une erreur s'est produite lors de la récupération des données: {e}")
+            self.logger.error(f"[WebServiceDevice.py] - Une erreur s'est produite lors de la récupération des données: {e}")
             return None
         except requests.exceptions.Timeout:
-            self.logger.log_error("[WebServiceDevice.py] - Timeout lors de la récupération des données")
+            self.logger.error("[WebServiceDevice.py] - Timeout lors de la récupération des données")
             return None
         except requests.exceptions.TooManyRedirects:
-            self.logger.log_error("[WebServiceDevice.py] - Trop de redirections lors de la récupération des données (URL incorrecte)")
+            self.logger.error("[WebServiceDevice.py] - Trop de redirections lors de la récupération des données (URL incorrecte)")
             return None
         except requests.exceptions.RequestException as e:
-            self.logger.log_error(f"[WebServiceDevice.py] - Une erreur s'est produite lors de la récupération des données: {e}")
+            self.logger.error(f"[WebServiceDevice.py] - Une erreur s'est produite lors de la récupération des données: {e}")
             return None
 
         return response.json()

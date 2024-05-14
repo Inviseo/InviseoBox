@@ -80,20 +80,20 @@ class SerialRTUModbusDevice:
                 time.sleep(1)
                 seconds += 1
                 if seconds > 3:
-                    self.logger.log_error("[ModbusDevice.py] Le client Modbus a pris trop de temps pour se connecter")
+                    self.logger.error("[ModbusDevice.py] Le client Modbus a pris trop de temps pour se connecter")
                     raise Exception("[ModbusDevice.py] Le client Modbus a pris trop de temps pour se connecter")
         except Exception as e:
-            self.logger.log_error(f"[ModbusDevice.py] Une erreur s'est produite lors de la connexion du client Modbus: {e}")
+            self.logger.error(f"[ModbusDevice.py] Une erreur s'est produite lors de la connexion du client Modbus: {e}")
     
     async def disconnect(self):
         try:
             self.client.close()
         except Exception as e:
-            self.logger.log_error(f"[ModbusDevice.py] Une erreur s'est produite lors de la déconnexion du client Modbus: {e}")
+            self.logger.error(f"[ModbusDevice.py] Une erreur s'est produite lors de la déconnexion du client Modbus: {e}")
 
     async def read(self, register, address, count, slave, byte_order, value_class):
         if not self.client.connected:
-            self.logger.log_error("[ModbusDevice.py] Le client Modbus n'est pas connecté")
+            self.logger.error("[ModbusDevice.py] Le client Modbus n'est pas connecté")
             raise Exception("[ModbusDevice.py] Le client Modbus n'est pas connecté")
         try:
             if register == "0x01":
@@ -105,20 +105,20 @@ class SerialRTUModbusDevice:
             elif register == "0x04":
                 value = await self.client.read_input_registers(address, count, slave)
             else:
-                self.logger.log_error(f"[ModbusDevice.py] Le registre {register} n'est pas supporté")
+                self.logger.error(f"[ModbusDevice.py] Le registre {register} n'est pas supporté")
                 raise Exception(f"[ModbusDevice.py] Le registre {register} n'est pas supporté")
             seconds = 0
             while not value:
                 time.sleep(1)
                 seconds += 1
                 if seconds > 3:
-                    self.logger.log_error("[ModbusDevice.py] Le client Modbus a pris trop de temps pour lire les registres")
+                    self.logger.error("[ModbusDevice.py] Le client Modbus a pris trop de temps pour lire les registres")
                     raise Exception("[ModbusDevice.py] Le client Modbus a pris trop de temps pour lire les registres")
         except Exception as e:
-            self.logger.log_error(f"[ModbusDevice.py] Une erreur s'est produite lors de la lecture des registres Modbus: {e}")
+            self.logger.error(f"[ModbusDevice.py] Une erreur s'est produite lors de la lecture des registres Modbus: {e}")
         try:
             decodedValue = decodeValue(byte_order, value_class, value.registers)
         except Exception as e:
-            self.logger.log_error(f"[ModbusDevice.py] Une erreur s'est produite lors du décodage de la valeur: {e}")
+            self.logger.error(f"[ModbusDevice.py] Une erreur s'est produite lors du décodage de la valeur: {e}")
 
         return decodedValue

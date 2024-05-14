@@ -29,14 +29,14 @@ class Logger:
         # Add the file handler to the logger
         self.logger.addHandler(file_handler)
         
-    def log_info(self, message):
+    def info(self, message):
         self.logger.info(message)
         
-    def log_warning(self, message):
+    def warning(self, message):
         self.logger.warning(message)
         
-    def log_error(self, message):
+    def error(self, message):
         self.logger.error(message)
         
-    def log_debug(self, message):
+    def debug(self, message):
         self.logger.debug(message)
