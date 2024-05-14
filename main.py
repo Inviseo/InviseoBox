@@ -1,3 +1,8 @@
+import sys
+
+# Redirection de la sortie standard vers un fichier
+sys.stdout = open('./standard_output.txt', 'w')
+
 from SQLiteDatabase import SQLiteDatabase
 from ModbusDevice import SerialRTUModbusDevice
 from WebServiceDevice import WebServiceDevice
@@ -16,6 +21,7 @@ logger = Logger()
 
 # API
 from API import API
+
 
 # Tableau qui servira à stocker toutes les états des appareils, si jamais on arrive pas à les renvoyer à l'API
 devices_status_to_send = []
