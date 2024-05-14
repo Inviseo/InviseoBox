@@ -1,7 +1,7 @@
 import sys
 
 # Redirection de la sortie standard vers un fichier
-sys.stdout = open('./standard_output.txt', 'w')
+sys.stdout = open('./standard_output.txt', 'a')
 
 from SQLiteDatabase import SQLiteDatabase
 from ModbusDevice import SerialRTUModbusDevice
