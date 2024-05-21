@@ -71,10 +71,7 @@ async def scheduled_main_loop(api, devices):
             if device["communication"]["protocol"] == "WebService":
                 web_service_device = WebServiceDevice(device["communication"]["configuration"]["url"])
                 try:
-                    # Afficher l'URL du service Web
-                    # print(device["communication"]["configuration"]["url"])
                     data = web_service_device.getData()
-                    # print(data)
                     database.insert_device(device["_id"], "ok")
                     for measurement in device["measurements"]:
 
@@ -130,7 +127,6 @@ async def scheduled_main_loop(api, devices):
 
     # Envoi de l'état des appareils et mesures (devices) à l'API
     devices_status_to_send.append(devices_status)
-    print(devices_status_to_send)
     try:
         for status in devices_status_to_send:
             api.send_devices_status(status)
@@ -188,7 +184,6 @@ async def scheduled_main_loop(api, devices):
                     fields["fields"].append({"measurement": measurement_id, "value": response, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
 
     fields_to_send.append(fields)
-    # print(fields_to_send)
     try:
         for field in fields_to_send:
             api.send_fields(field)
