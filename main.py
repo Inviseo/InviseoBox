@@ -1,8 +1,3 @@
-import sys
-
-# Redirection de la sortie standard vers un fichier
-sys.stdout = open('./standard_output.txt', 'a')
-
 from SQLiteDatabase import SQLiteDatabase
 from ModbusDevice import SerialRTUModbusDevice
 from WebServiceDevice import WebServiceDevice
@@ -32,7 +27,6 @@ fields_to_send = []
 async def scheduled_main_loop(api, devices):
     logger.info("[main.py] - Début de la boucle principale")
     start_time = time.time()
-    
     # Récupération du token d'authentification
     try:
         api.get_token()
@@ -48,7 +42,7 @@ async def scheduled_main_loop(api, devices):
     except Exception as e:
         logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération des appareils: {e}")
     
-    while time.time() - start_time < 1800:
+    while time.time() - start_time < 10:
         for device in devices:
             if device["communication"]["protocol"] == "Modbus":
                 if device["communication"]["mode"] == "RTU":
@@ -63,6 +57,7 @@ async def scheduled_main_loop(api, devices):
                                 database.insert_measurement(measurement["_id"], "ok")
                             except Exception as e:
                                 logger.warning(f"[main.py] - Une erreur s'est produite lors de la lecture des données Modbus: {e}")
+                                database.insert_data(measurement["_id"], None)
                                 database.insert_measurement(measurement["_id"], "dead")
                                 time.sleep(1)
                     except Exception as e:
@@ -76,24 +71,30 @@ async def scheduled_main_loop(api, devices):
             if device["communication"]["protocol"] == "WebService":
                 web_service_device = WebServiceDevice(device["communication"]["configuration"]["url"])
                 try:
+                    # Afficher l'URL du service Web
+                    # print(device["communication"]["configuration"]["url"])
                     data = web_service_device.getData()
+                    # print(data)
                     database.insert_device(device["_id"], "ok")
                     for measurement in device["measurements"]:
+
                         try:
                             value = data[measurement["configuration"]["parameters"]["key"]]
                             database.insert_data(measurement["_id"], value)
                             database.insert_measurement(measurement["_id"], "ok")
-                        except Exception as e:
+
+                        except Exception as e:  
                             logger.warning(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web: {e}")
+                            database.insert_data(measurement["_id"], None)
                             database.insert_measurement(measurement["_id"], "dead")
                             time.sleep(1)
                 except Exception as e:
+
                     logger.warning(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web: {e}")
                     database.insert_device(device["_id"], "dead")
                     time.sleep(1)
                     
     devices_status = {"devices": []}
-
 
     for device in devices:
         device_id = device["_id"]
@@ -129,6 +130,7 @@ async def scheduled_main_loop(api, devices):
 
     # Envoi de l'état des appareils et mesures (devices) à l'API
     devices_status_to_send.append(devices_status)
+    print(devices_status_to_send)
     try:
         for status in devices_status_to_send:
             api.send_devices_status(status)
@@ -186,6 +188,7 @@ async def scheduled_main_loop(api, devices):
                     fields["fields"].append({"measurement": measurement_id, "value": response, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
 
     fields_to_send.append(fields)
+    # print(fields_to_send)
     try:
         for field in fields_to_send:
             api.send_fields(field)
@@ -193,10 +196,7 @@ async def scheduled_main_loop(api, devices):
     except Exception as e:
         logger.error(f"[main.py] - Une erreur s'est produite lors de l'envoi des champs: {e}")
 
-    try:
-        await scheduled_main_loop(api, devices)
-    except Exception as e:
-        logger.error(f"[main.py] - Une erreur s'est produite lors de l'exécution de la boucle principale: {e}")
+    await scheduled_main_loop(api, devices)
 
 
 async def main_execution_thread():
