@@ -42,7 +42,7 @@ async def scheduled_main_loop(api, devices):
     except Exception as e:
         logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération des appareils: {e}")
     
-    while time.time() - start_time < 10:
+    while time.time() - start_time < 1800:
         for device in devices:
             if device["communication"]["protocol"] == "Modbus":
                 if device["communication"]["mode"] == "RTU":
