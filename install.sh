@@ -74,6 +74,23 @@ git clone "https://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@github.com/inviseo/i
     exit 1
 }
 
+# Demander à l'utilisateur le temps (en secondes) entre chaque envoi de données. Il doit être inférieur ou égal à 1800 secondes (30 minutes) dans le cadre du décret BACS.
+function ask_interval() {
+    read -p "Veuillez saisir le temps (en secondes) entre chaque envoi de données (par défaut : 1800 secondes) : 
+    - 30 minutes : 1800 secondes
+    - 15 minutes : 900 secondes
+    - 10 minutes : 600 secondes
+    - 5 minutes : 300 secondes
+    " interval
+    if [ -z "$interval" ]; then
+        interval=1800
+    fi
+    if [ "$interval" -gt 1800 ]; then
+        echo "Le temps entre chaque envoi de données doit être inférieur ou égal à 1800 secondes."
+        ask_interval
+    fi
+}
+
 
 if [ ! -f .env ]; then
     echo "url=\"https://client.inviseo.fr/api\"
@@ -81,7 +98,9 @@ if [ ! -f .env ]; then
 # Authentification
 email=\"vincent@inviseo.fr\"
 password=\"runf86lq\"
-worker_id=\"$worker_id\"" > inviseobox/.env
+worker_id=\"$worker_id\"
+interval=\"$interval\"
+" > inviseobox/.env
     echo "Le fichier .env a été créé avec succès."
 fi
 

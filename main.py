@@ -168,12 +168,12 @@ def build_fields(database, devices):
             fields["fields"].append({"measurement": measurement_id, "value": response, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
     return fields
 
-async def scheduled_main_loop(api, devices):
+async def scheduled_main_loop(api, devices, interval=1800):
     logger.info("[main.py] - Début de la boucle principale")
     start_time = time.time()
     database = SQLiteDatabase("data.db")
 
-    while time.time() - start_time < 1800:
+    while time.time() - start_time < interval:
         for device in devices:
             if device["communication"]["protocol"] == "Modbus" and device["communication"]["mode"] == "RTU":
                 await handle_modbus_device(device, database)
@@ -202,11 +202,12 @@ async def scheduled_main_loop(api, devices):
     except Exception as e:
         logger.error(f"[main.py] - Erreur d'envoi des données: {e}")
 
-    await scheduled_main_loop(api, devices)
+    await scheduled_main_loop(api, devices, interval)
 
 async def main_execution_thread():
     try:
         load_dotenv()
+        interval = int(os.getenv("interval"))
         api = API(os.getenv("url"), os.getenv("email"), os.getenv("password"), os.getenv("worker_id"), logger)
         api.get_token()
         devices = api.get_devices()
@@ -216,7 +217,7 @@ async def main_execution_thread():
         await main_execution_thread()
     
     try:
-        await scheduled_main_loop(api, devices)
+        await scheduled_main_loop(api, devices, interval)
     except Exception as e:
         logger.error(f"[main.py] - Une erreur s'est produite lors de l'exécution de la boucle principale: {e}")
 
