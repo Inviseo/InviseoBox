@@ -161,3 +161,5 @@ cython_debug/
 
 data.db
 .env
+device_status_to_send.json
+fields_to_send.json

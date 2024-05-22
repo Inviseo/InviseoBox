@@ -1,26 +1,17 @@
+import os
+import time
+import json
+import asyncio
+from dotenv import load_dotenv
 from SQLiteDatabase import SQLiteDatabase
 from ModbusDevice import SerialRTUModbusDevice
 from WebServiceDevice import WebServiceDevice
-
-# Variables d'environnement
-from dotenv import load_dotenv
-import os
-
-# Scheduler
-import time
-import asyncio
-
-# Logs
 from Logger import Logger
-logger = Logger()
-
-# API
 from API import API
 
-# Gestions des fichiers JSON
-import json
+logger = Logger()
 
-# Ajouter ces fonctions pour lire et écrire les fichiers JSON
+# JSON file utilities
 def load_json_file(file_path):
     try:
         with open(file_path, 'r') as file:
@@ -43,137 +34,99 @@ def remove_from_json_file(file_path, data):
         current_data.remove(data)
         save_json_file(file_path, current_data)
 
-# Initialiser les fichiers JSON
+# Initialisation des fichiers de JSON
 devices_status_file = 'device_status_to_send.json'
 fields_file = 'fields_to_send.json'
-
-# Charger les données depuis les fichiers JSON
 devices_status_to_send = load_json_file(devices_status_file)
 fields_to_send = load_json_file(fields_file)
 
-async def scheduled_main_loop(api, devices):
-    logger.info("[main.py] - Début de la boucle principale")
-    start_time = time.time()
-    # Récupération du token d'authentification
+async def handle_modbus_device(device, database):
+    modbus_device = SerialRTUModbusDevice(**device["communication"]["configuration"])
     try:
-        api.get_token()
-    except Exception as e:
-        logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération du token d'authentification: {e}")
-    
-    # Création de la base de données
-    database = SQLiteDatabase("data.db")
-
-    try:
-        devices = api.get_devices()
-    except Exception as e:
-        logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération des appareils: {e}")
-    
-    while time.time() - start_time < 1800:
-        for device in devices:
-            if device["communication"]["protocol"] == "Modbus":
-                if device["communication"]["mode"] == "RTU":
-                    try:
-                        modbus_device = SerialRTUModbusDevice(**device["communication"]["configuration"])
-                        await modbus_device.connect()
-                        database.insert_device(device["_id"], "ok")
-                        for measurement in device["measurements"]:
-                            try:
-                                value = await modbus_device.read(**measurement["configuration"]["parameters"])
-                                database.insert_data(measurement["_id"], value)
-                                database.insert_measurement(measurement["_id"], "ok")
-                            except Exception as e:
-                                logger.warning(f"[main.py] - Une erreur s'est produite lors de la lecture des données Modbus: {e}")
-                                database.insert_data(measurement["_id"], None)
-                                database.insert_measurement(measurement["_id"], "dead")
-                                time.sleep(1)
-                    except Exception as e:
-                        logger.warning(f"[main.py] - Une erreur s'est produite lors de la connexion de l'appareil Modbus: {e}")
-                        for measurement in device["measurements"]:
-                            database.insert_data(measurement["_id"], None)
-                            database.insert_measurement(measurement["_id"], "dead")
-                        database.insert_device(device["_id"], "dead")
-                        time.sleep(1)
-                    try:
-                        await modbus_device.disconnect()
-                    except Exception as e:
-                        logger.error(f"[main.py] - Une erreur s'est produite lors de la déconnexion de l'appareil Modbus: {e}")
-            if device["communication"]["protocol"] == "WebService":
-                web_service_device = WebServiceDevice(device["communication"]["configuration"]["url"])
-                try:
-                    success, data = web_service_device.getData()
-                    if success:
-                        database.insert_device(device["_id"], "ok")
-                        for measurement in device["measurements"]:
-                            try:
-                                value = data[measurement["configuration"]["parameters"]["key"]]
-                                database.insert_data(measurement["_id"], value)
-                                database.insert_measurement(measurement["_id"], "ok")
-                            except Exception as e:  
-                                logger.warning(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web: {e}")
-                                database.insert_data(measurement["_id"], None)
-                                database.insert_measurement(measurement["_id"], "dead")
-                                time.sleep(1)
-                    else:
-                        database.insert_device(device["_id"], "dead")
-                        for measurement in device["measurements"]:
-                            database.insert_data(measurement["_id"], None)
-                            database.insert_measurement(measurement["_id"], "dead")
-                        logger.warning(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web")
-                except Exception as e:
-                    logger.warning(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web: {e}")
-                    for measurement in device["measurements"]:
-                        database.insert_data(measurement["_id"], None)
-                        database.insert_measurement(measurement["_id"], "dead")
-                    database.insert_device(device["_id"], "dead")
-                    time.sleep(1)
-
-    devices_status = {"devices": []}
-
-    for device in devices:
-        device_id = device["_id"]
-        
-        device_status_list = database.execute(f"SELECT status FROM devices WHERE _id = '{device_id}'")
-        device_status_list = [status[0] for status in device_status_list]
-        # S'il n'y a que des "ok" dans la liste des status, alors le status de l'appareil est "ok"
-        if all(status == "ok" for status in device_status_list):
-            device_status = "ok"
-        # S'il n'y a que des "dead" dans la liste des status, alors le status de l'appareil est "dead"
-        elif all(status == "dead" for status in device_status_list):
-            device_status = "dead"
-        # Sinon, le status de l'appareil est "partial"
-        else:
-            device_status = "partial"
-
-        measurements_status = []
+        await modbus_device.connect()
+        database.insert_device(device["_id"], "ok")
         for measurement in device["measurements"]:
-            measurement_id = measurement["_id"]
-            measurements_status_list = database.execute(f"SELECT status FROM measurements WHERE _id = '{measurement_id}'")
-            measurements_status_list = [status[0] for status in measurements_status_list]
-            # S'il n'y a que des "ok" dans la liste des status, alors le status de la mesure est "ok"
-            if all(status == "ok" for status in measurements_status_list):
-                measurement_status = "ok"
-            # S'il n'y a que des "dead" dans la liste des status, alors le status de la mesure est "dead"
-            elif all(status == "dead" for status in measurements_status_list):
-                measurement_status = "dead"
-            # Sinon, le status de la mesure est "partial"
-            else:
-                measurement_status = "partial"
-            measurements_status.append({"_id": measurement_id, "status": measurement_status})
-        devices_status["devices"].append({"_id": device_id, "status": device_status, "measurements": measurements_status})
-
-    # Envoi des statuts des appareils
-    devices_status_to_send.append(devices_status)
-    append_to_json_file(devices_status_file, devices_status)
-    try:
-        for status in devices_status_to_send:
-            api.send_devices_status(status)
-            devices_status_to_send.remove(status)
-            remove_from_json_file(devices_status_file, status)
+            try:
+                value = await modbus_device.read(**measurement["configuration"]["parameters"])
+                database.insert_data(measurement["_id"], value)
+                database.insert_measurement(measurement["_id"], "ok")
+            except Exception as e:
+                logger.warning(f"[main.py] - Erreur de récupération des données Modbus: {e}")
+                database.insert_data(measurement["_id"], None)
+                database.insert_measurement(measurement["_id"], "dead")
+                time.sleep(1)
     except Exception as e:
-        logger.error(f"[main.py] - Une erreur s'est produite lors de l'envoi de l'état des appareils: {e}")
+        logger.warning(f"[main.py] - Erreur de communication Modbus: {e}")
+        for measurement in device["measurements"]:
+            database.insert_data(measurement["_id"], None)
+            database.insert_measurement(measurement["_id"], "dead")
+        database.insert_device(device["_id"], "dead")
+        time.sleep(1)
+    finally:
+        try:
+            await modbus_device.disconnect()
+        except Exception as e:
+            logger.error(f"[main.py] - Erreur de déconnexion Modbus: {e}")
 
+async def handle_web_service_device(device, database):
+    web_service_device = WebServiceDevice(device["communication"]["configuration"]["url"])
+    try:
+        success, data = web_service_device.getData()
+        if success:
+            database.insert_device(device["_id"], "ok")
+            for measurement in device["measurements"]:
+                try:
+                    value = data[measurement["configuration"]["parameters"]["key"]]
+                    database.insert_data(measurement["_id"], value)
+                    database.insert_measurement(measurement["_id"], "ok")
+                except Exception as e:
+                    logger.warning(f"[main.py] - Erreur de récupération des données du service web: {e}")
+                    database.insert_data(measurement["_id"], None)
+                    database.insert_measurement(measurement["_id"], "dead")
+                    time.sleep(1)
+        else:
+            raise Exception("Failed to get data")
+    except Exception as e:
+        logger.warning(f"[main.py] - Erreur de communication avec le service web: {e}")
+        for measurement in device["measurements"]:
+            database.insert_data(measurement["_id"], None)
+            database.insert_measurement(measurement["_id"], "dead")
+        database.insert_device(device["_id"], "dead")
+        time.sleep(1)
+
+def determine_device_status(database, device):
+    device_id = device["_id"]
+    device_status_list = database.execute(f"SELECT status FROM devices WHERE _id = '{device_id}'")
+    device_status_list = [status[0] for status in device_status_list]
+    if all(status == "ok" for status in device_status_list):
+        return "ok"
+    elif all(status == "dead" for status in device_status_list):
+        return "dead"
+    return "partial"
+
+def determine_measurement_status(database, measurement):
+    measurement_id = measurement["_id"]
+    measurements_status_list = database.execute(f"SELECT status FROM measurements WHERE _id = '{measurement_id}'")
+    measurements_status_list = [status[0] for status in measurements_status_list]
+    if all(status == "ok" for status in measurements_status_list):
+        return "ok"
+    elif all(status == "dead" for status in measurements_status_list):
+        return "dead"
+    return "partial"
+
+def build_devices_status(database, devices):
+    devices_status = {"devices": []}
+    for device in devices:
+        device_status = determine_device_status(database, device)
+        measurements_status = [
+            {"_id": m["_id"], "status": determine_measurement_status(database, m)}
+            for m in device["measurements"]
+        ]
+        devices_status["devices"].append({"_id": device["_id"], "status": device_status, "measurements": measurements_status})
+    return devices_status
+
+def build_fields(database, devices):
     fields = {"fields": []}
-
     for device in devices:
         for measurement in device["measurements"]:
             measurement_id = measurement["_id"]
@@ -184,42 +137,61 @@ async def scheduled_main_loop(api, devices):
                     min_value = database.execute(f"SELECT MIN(value) FROM fields WHERE measurement = '{measurement_id}'")[0][0]
                     response["min"] = str(min_value)
                 except Exception as e:
-                    logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération de la valeur minimale: {e}")
+                    logger.error(f"[main.py] - Erreur de récupération de la valeur minimale: {e}")
 
             if "max" in measurement_configuration["response_format"]:
                 try:
                     max_value = database.execute(f"SELECT MAX(value) FROM fields WHERE measurement = '{measurement_id}'")[0][0]
                     response["max"] = str(max_value)
                 except Exception as e:
-                    logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération de la valeur maximale: {e}")
+                    logger.error(f"[main.py] - Erreur de récupération de la valeur maximale: {e}")
 
             if "avg" in measurement_configuration["response_format"]:
                 try:
                     avg_value = database.execute(f"SELECT AVG(value) FROM fields WHERE measurement = '{measurement_id}'")[0][0]
                     response["avg"] = str(avg_value)
                 except Exception as e:
-                    logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération de la valeur moyenne: {e}")
+                    logger.error(f"[main.py] - Erreur de récupération de la valeur moyenne: {e}")
 
             if "diff" in measurement_configuration["response_format"]:
                 try:
                     first_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY timestamp ASC LIMIT 1")[0][0]
-                    last_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY timestamp DESC LIMIT 1")[0][0]                    # Si last_value et first_value sont des nombres, on peut calculer la différence
-                    # Si last_value et first_value sont des nombres, on peut calculer la différence
-                    if not isinstance(first_value, (int, float)) or not isinstance(last_value, (int, float)):
-                        response["diff"] = None
-                    diff_value = last_value - first_value
-                    response["diff"] = str(diff_value)
+                    last_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY timestamp DESC LIMIT 1")[0][0]
+                    if isinstance(first_value, (int, float)) and isinstance(last_value, (int, float)):
+                        response["diff"] = str(last_value - first_value)
+                    else:
+                        response["diff"] = str(None)
                 except Exception as e:
-                    logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération de la différence de valeur: {e}")
+                    logger.error(f"[main.py] - Erreur de récupération de la différence: {e}")
 
             # Ajouter les valeurs à envoyer
-            if "min" in response:
-                if response["min"]:
-                    fields["fields"].append({"measurement": measurement_id, "value": response, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
-            if "diff" in response:
-                if response["diff"]:
-                    fields["fields"].append({"measurement": measurement_id, "value": response, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
+            fields["fields"].append({"measurement": measurement_id, "value": response, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
+    return fields
 
+async def scheduled_main_loop(api, devices):
+    logger.info("[main.py] - Début de la boucle principale")
+    start_time = time.time()
+    database = SQLiteDatabase("data.db")
+
+    while time.time() - start_time < 1800:
+        for device in devices:
+            if device["communication"]["protocol"] == "Modbus" and device["communication"]["mode"] == "RTU":
+                await handle_modbus_device(device, database)
+            elif device["communication"]["protocol"] == "WebService":
+                await handle_web_service_device(device, database)
+
+    devices_status = build_devices_status(database, devices)
+    devices_status_to_send.append(devices_status)
+    append_to_json_file(devices_status_file, devices_status)
+    try:
+        for status in devices_status_to_send:
+            api.send_devices_status(status)
+            devices_status_to_send.remove(status)
+            remove_from_json_file(devices_status_file, status)
+    except Exception as e:
+        logger.error(f"[main.py] - Erreur d'envoi du statut des appareils: {e}")
+
+    fields = build_fields(database, devices)
     fields_to_send.append(fields)
     append_to_json_file(fields_file, fields)
     try:
@@ -228,7 +200,7 @@ async def scheduled_main_loop(api, devices):
             fields_to_send.remove(field)
             remove_from_json_file(fields_file, field)
     except Exception as e:
-        logger.error(f"[main.py] - Une erreur s'est produite lors de l'envoi des champs: {e}")
+        logger.error(f"[main.py] - Erreur d'envoi des données: {e}")
 
     await scheduled_main_loop(api, devices)
 
@@ -239,7 +211,7 @@ async def main_execution_thread():
         api.get_token()
         devices = api.get_devices()
     except Exception as e:
-        logger.error(f"[main.py] - Une erreur s'est produite lors de l'initialisation de l'API: {e}")
+        logger.error(f"[main.py] - Une erreur s'est produite lors de l'initialisation: {e}")
         time.sleep(5)
         await main_execution_thread()
     
