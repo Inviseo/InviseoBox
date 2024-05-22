@@ -99,12 +99,11 @@ git clone "https://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@github.com/inviseo/i
 
 if [ ! -f .env ]; then
     echo "url=\"https://client.inviseo.fr/api\"
-
-# Authentification
 email=\"vincent@inviseo.fr\"
 password=\"runf86lq\"
-worker_id=\"$worker_id\"
-interval=\"$interval\"" > inviseobox/.env
+worker_id=$worker_id
+interval=$interval" > inviseobox/.env
+
     echo "Le fichier .env a été créé avec succès."
 fi
 
