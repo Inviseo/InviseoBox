@@ -17,12 +17,39 @@ logger = Logger()
 # API
 from API import API
 
+# Gestions des fichiers JSON
+import json
 
-# Tableau qui servira à stocker toutes les états des appareils, si jamais on arrive pas à les renvoyer à l'API
-devices_status_to_send = []
+# Ajouter ces fonctions pour lire et écrire les fichiers JSON
+def load_json_file(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            return json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
 
-# Tableau qui servira à stocker toutes les champs (fields) à envoyer à l'API
-fields_to_send = []
+def save_json_file(file_path, data):
+    with open(file_path, 'w') as file:
+        json.dump(data, file, indent=4)
+
+def append_to_json_file(file_path, data):
+    current_data = load_json_file(file_path)
+    current_data.append(data)
+    save_json_file(file_path, current_data)
+
+def remove_from_json_file(file_path, data):
+    current_data = load_json_file(file_path)
+    if data in current_data:
+        current_data.remove(data)
+        save_json_file(file_path, current_data)
+
+# Initialiser les fichiers JSON
+devices_status_file = 'device_status_to_send.json'
+fields_file = 'fields_to_send.json'
+
+# Charger les données depuis les fichiers JSON
+devices_status_to_send = load_json_file(devices_status_file)
+fields_to_send = load_json_file(fields_file)
 
 async def scheduled_main_loop(api, devices):
     logger.info("[main.py] - Début de la boucle principale")
@@ -36,7 +63,6 @@ async def scheduled_main_loop(api, devices):
     # Création de la base de données
     database = SQLiteDatabase("data.db")
 
-    # Récupération des appareils
     try:
         devices = api.get_devices()
     except Exception as e:
@@ -62,7 +88,6 @@ async def scheduled_main_loop(api, devices):
                                 time.sleep(1)
                     except Exception as e:
                         logger.warning(f"[main.py] - Une erreur s'est produite lors de la connexion de l'appareil Modbus: {e}")
-                        # Insérer pour chaque mesure une mesure None
                         for measurement in device["measurements"]:
                             database.insert_data(measurement["_id"], None)
                             database.insert_measurement(measurement["_id"], "dead")
@@ -90,12 +115,10 @@ async def scheduled_main_loop(api, devices):
                                 time.sleep(1)
                     else:
                         database.insert_device(device["_id"], "dead")
-                        # Insérer pour chaque mesure une mesure None et dead
                         for measurement in device["measurements"]:
                             database.insert_data(measurement["_id"], None)
                             database.insert_measurement(measurement["_id"], "dead")
                         logger.warning(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web")
-
                 except Exception as e:
                     logger.warning(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web: {e}")
                     for measurement in device["measurements"]:
@@ -104,7 +127,6 @@ async def scheduled_main_loop(api, devices):
                     database.insert_device(device["_id"], "dead")
                     time.sleep(1)
 
-                    
     devices_status = {"devices": []}
 
     for device in devices:
@@ -112,13 +134,13 @@ async def scheduled_main_loop(api, devices):
         
         device_status_list = database.execute(f"SELECT status FROM devices WHERE _id = '{device_id}'")
         device_status_list = [status[0] for status in device_status_list]
-        # S'il n'y a QUE des "ok", alors le statut de l'appareil est "ok"
+        # S'il n'y a que des "ok" dans la liste des status, alors le status de l'appareil est "ok"
         if all(status == "ok" for status in device_status_list):
             device_status = "ok"
-        # S'il n'y a QUE des "dead", alors le statut de l'appareil est "dead"
+        # S'il n'y a que des "dead" dans la liste des status, alors le status de l'appareil est "dead"
         elif all(status == "dead" for status in device_status_list):
             device_status = "dead"
-        # S'il y a au moins un "ok" et un "dead", alors le statut de l'appareil est "partial"
+        # Sinon, le status de l'appareil est "partial"
         else:
             device_status = "partial"
 
@@ -127,28 +149,29 @@ async def scheduled_main_loop(api, devices):
             measurement_id = measurement["_id"]
             measurements_status_list = database.execute(f"SELECT status FROM measurements WHERE _id = '{measurement_id}'")
             measurements_status_list = [status[0] for status in measurements_status_list]
-            # S'il n'y a QUE des "ok", alors le statut de la mesure est "ok"
+            # S'il n'y a que des "ok" dans la liste des status, alors le status de la mesure est "ok"
             if all(status == "ok" for status in measurements_status_list):
                 measurement_status = "ok"
-            # S'il n'y a QUE des "dead", alors le statut de la mesure est "dead"
+            # S'il n'y a que des "dead" dans la liste des status, alors le status de la mesure est "dead"
             elif all(status == "dead" for status in measurements_status_list):
                 measurement_status = "dead"
-            # S'il y a au moins un "ok" et un "dead", alors le statut de la mesure est "partial"
+            # Sinon, le status de la mesure est "partial"
             else:
                 measurement_status = "partial"
             measurements_status.append({"_id": measurement_id, "status": measurement_status})
         devices_status["devices"].append({"_id": device_id, "status": device_status, "measurements": measurements_status})
 
-    # Envoi de l'état des appareils et mesures (devices) à l'API
+    # Envoi des statuts des appareils
     devices_status_to_send.append(devices_status)
+    append_to_json_file(devices_status_file, devices_status)
     try:
         for status in devices_status_to_send:
             api.send_devices_status(status)
             devices_status_to_send.remove(status)
+            remove_from_json_file(devices_status_file, status)
     except Exception as e:
         logger.error(f"[main.py] - Une erreur s'est produite lors de l'envoi de l'état des appareils: {e}")
 
-    # Envoi des champs (fields) à l'API
     fields = {"fields": []}
 
     for device in devices:
@@ -180,7 +203,7 @@ async def scheduled_main_loop(api, devices):
             if "diff" in measurement_configuration["response_format"]:
                 try:
                     first_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY timestamp ASC LIMIT 1")[0][0]
-                    last_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY timestamp DESC LIMIT 1")[0][0]
+                    last_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY timestamp DESC LIMIT 1")[0][0]                    # Si last_value et first_value sont des nombres, on peut calculer la différence
                     # Si last_value et first_value sont des nombres, on peut calculer la différence
                     if not isinstance(first_value, (int, float)) or not isinstance(last_value, (int, float)):
                         response["diff"] = None
@@ -189,26 +212,25 @@ async def scheduled_main_loop(api, devices):
                 except Exception as e:
                     logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération de la différence de valeur: {e}")
 
-            # Ici, si la valeur de la mesure est un nombre, on peut ajouter la mesure à la liste des champs à envoyer à l'API
-            # Sinon, on ne l'ajoute pas
+            # Ajouter les valeurs à envoyer
             if "min" in response:
                 if response["min"]:
-                    # "timestamp" au format ISO 8601
                     fields["fields"].append({"measurement": measurement_id, "value": response, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
             if "diff" in response:
                 if response["diff"]:
                     fields["fields"].append({"measurement": measurement_id, "value": response, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
 
     fields_to_send.append(fields)
+    append_to_json_file(fields_file, fields)
     try:
         for field in fields_to_send:
             api.send_fields(field)
             fields_to_send.remove(field)
+            remove_from_json_file(fields_file, field)
     except Exception as e:
         logger.error(f"[main.py] - Une erreur s'est produite lors de l'envoi des champs: {e}")
 
     await scheduled_main_loop(api, devices)
-
 
 async def main_execution_thread():
     try:
