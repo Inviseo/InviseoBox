@@ -22,49 +22,26 @@ check_internet() {
 # dir = répertoire actuel
 dir=$(pwd)
 
-# # Si aucun paramètre n'est passé lors de l'appel du script
-# if [ -z "$1" ]; then
-#     # Si le fichier "worker_id.txt" n'existe pas
-#     if [ ! -f "worker_id.txt" ]; then
-#         echo "Le fichier worker_id.txt n'existe pas. Veuillez saisir le worker_id :"
-#         read worker_id
-#         echo "$worker_id" > worker_id.txt
-#     else
-#         # Sinon, récupérer le worker_id depuis le fichier
-#         worker_id=$(cat worker_id.txt)
-#     fi
-# else
-#     # Si un paramètre est passé, mettre à jour le fichier "worker_id.txt" ou le créer
-#     echo "$1" > worker_id.txt
-#     worker_id="$1"
-# fi
-
-# En fait on va passer par un fichier "config.txt"
-# Qui se présentera sous la forme suivante :
-# worker_id=123456
-# interval=1800
-
-# Si aucun paramètre n'est passé lors de l'appel du script
-if [ -z "$1" ]; then
-    # Si le fichier "config.txt" n'existe pas
-    if [ ! -f "config.txt" ]; then
-        echo "Le fichier config.txt n'existe pas. Veuillez saisir le worker_id et l'intervalle :"
-        read -p "worker_id : " worker_id
-        read -p "interval : " interval
-        echo "worker_id=$worker_id" > config.txt
-        echo "interval=$interval" >> config.txt
+# Si le fichier "config.txt" n'existe pas
+if [ ! -f "config.txt" ]; then
+    # Le premier paramètre est le worker_id. S'il n'est pas passé, demander à l'utilisateur de le saisir
+    if [ -z "$1" ]; then
+        read -p "Veuillez saisir le worker_id : " worker_id
     else
-        # Sinon, récupérer le worker_id depuis le fichier
-        worker_id=$(grep -oP 'worker_id=\K.*' config.txt)
-        interval=$(grep -oP 'interval=\K.*' config.txt)
+        echo "worker_id=$1" > config.txt
+        worker_id="$1"
+    fi
+    # Le deuxième paramètre est l'intervalle. S'il n'est pas passé, demander à l'utilisateur de le saisir
+    if [ -z "$2" ]; then
+        read -p "Veuillez saisir l'intervalle (en secondes) entre chaque envoi de données (par défaut : 1800 secondes) : " interval
+    else
+        echo "interval=$2" >> config.txt
+        interval="$2"
     fi
 else
-    # Si un paramètre est passé, mettre à jour le fichier "config.txt" ou le créer
-    echo "worker_id=$1" > config.txt
-    read -p "Veuillez saisir l'intervalle (en secondes) entre chaque envoi de données (par défaut : 1800 secondes) : " interval
-    echo "interval=$interval" >> config.txt
-    worker_id="$1"
-    interval=1800
+    # Sinon, récupérer le worker_id et l'intervalle depuis le fichier
+    worker_id=$(grep -oP 'worker_id=\K.*' config.txt)
+    interval=$(grep -oP 'interval=\K.*' config.txt)
 fi
 
 
