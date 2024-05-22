@@ -29,17 +29,17 @@ echo "Paramètre 2 (interval) : $2"
 if [ ! -f "config.txt" ]; then
     echo "Le fichier config.txt n'existe pas."
     # Le premier paramètre est le worker_id. S'il n'est pas passé, demander à l'utilisateur de le saisir
-    if [ -z "$1" ]; then
+    if [[ -z "$1" ]]; then
         read -p "Veuillez saisir le worker_id : " worker_id
     else
         echo "Le worker_id \""$1"\" a été enregistré dans le fichier config.txt."
         worker_id="$1"
     fi
     # Le deuxième paramètre est l'intervalle. S'il n'est pas passé, demander à l'utilisateur de le saisir
-    if [ -z "$2" ]; then
+    if [[ -z "$2" ]]; then
         read -p "Veuillez saisir l'intervalle (en secondes) entre chaque envoi de données (par défaut : 1800 secondes) : " interval
     else
-        if [ ! -z "$interval" ]; then
+        if [[ ! -z "$interval" ]]; then
             echo "Un intervalle de \""$2"\" a été enregistré dans le fichier config.txt."
             interval="$2"
         else
