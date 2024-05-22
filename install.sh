@@ -22,22 +22,51 @@ check_internet() {
 # dir = répertoire actuel
 dir=$(pwd)
 
+# # Si aucun paramètre n'est passé lors de l'appel du script
+# if [ -z "$1" ]; then
+#     # Si le fichier "worker_id.txt" n'existe pas
+#     if [ ! -f "worker_id.txt" ]; then
+#         echo "Le fichier worker_id.txt n'existe pas. Veuillez saisir le worker_id :"
+#         read worker_id
+#         echo "$worker_id" > worker_id.txt
+#     else
+#         # Sinon, récupérer le worker_id depuis le fichier
+#         worker_id=$(cat worker_id.txt)
+#     fi
+# else
+#     # Si un paramètre est passé, mettre à jour le fichier "worker_id.txt" ou le créer
+#     echo "$1" > worker_id.txt
+#     worker_id="$1"
+# fi
+
+# En fait on va passer par un fichier "config.txt"
+# Qui se présentera sous la forme suivante :
+# worker_id=123456
+# interval=1800
+
 # Si aucun paramètre n'est passé lors de l'appel du script
 if [ -z "$1" ]; then
-    # Si le fichier "worker_id.txt" n'existe pas
-    if [ ! -f "worker_id.txt" ]; then
-        echo "Le fichier worker_id.txt n'existe pas. Veuillez saisir le worker_id :"
-        read worker_id
-        echo "$worker_id" > worker_id.txt
+    # Si le fichier "config.txt" n'existe pas
+    if [ ! -f "config.txt" ]; then
+        echo "Le fichier config.txt n'existe pas. Veuillez saisir le worker_id et l'intervalle :"
+        read -p "worker_id : " worker_id
+        read -p "interval : " interval
+        echo "worker_id=$worker_id" > config.txt
+        echo "interval=$interval" >> config.txt
     else
         # Sinon, récupérer le worker_id depuis le fichier
-        worker_id=$(cat worker_id.txt)
+        worker_id=$(grep -oP 'worker_id=\K.*' config.txt)
+        interval=$(grep -oP 'interval=\K.*' config.txt)
     fi
 else
-    # Si un paramètre est passé, mettre à jour le fichier "worker_id.txt" ou le créer
-    echo "$1" > worker_id.txt
+    # Si un paramètre est passé, mettre à jour le fichier "config.txt" ou le créer
+    echo "worker_id=$1" > config.txt
+    read -p "Veuillez saisir l'intervalle (en secondes) entre chaque envoi de données (par défaut : 1800 secondes) : " interval
+    echo "interval=$interval" >> config.txt
     worker_id="$1"
+    interval=1800
 fi
+
 
 # Si le service n'existe pas, le créer
 if [ ! -f /etc/systemd/system/inviseo.service ]; then
@@ -74,24 +103,6 @@ git clone "https://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@github.com/inviseo/i
     exit 1
 }
 
-# Demander à l'utilisateur le temps (en secondes) entre chaque envoi de données. Il doit être inférieur ou égal à 1800 secondes (30 minutes) dans le cadre du décret BACS.
-function ask_interval() {
-    read -p "Veuillez saisir le temps (en secondes) entre chaque envoi de données (par défaut : 1800 secondes) : 
-    - 30 minutes : 1800 secondes
-    - 15 minutes : 900 secondes
-    - 10 minutes : 600 secondes
-    - 5 minutes : 300 secondes
-    " interval
-    if [ -z "$interval" ]; then
-        interval=1800
-    fi
-    if [ "$interval" -gt 1800 ]; then
-        echo "Le temps entre chaque envoi de données doit être inférieur ou égal à 1800 secondes."
-        ask_interval
-    fi
-}
-
-ask_interval
 
 if [ ! -f .env ]; then
     echo "url=\"https://client.inviseo.fr/api\"
