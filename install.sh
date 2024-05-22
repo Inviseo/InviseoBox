@@ -22,6 +22,9 @@ check_internet() {
 # dir = répertoire actuel
 dir=$(pwd)
 
+echo "Paramètre 1 (worker_id) : $1"
+echo "Paramètre 2 (interval) : $2"
+
 # Si le fichier "config.txt" n'existe pas
 if [ ! -f "config.txt" ]; then
     echo "Le fichier config.txt n'existe pas."
@@ -29,6 +32,7 @@ if [ ! -f "config.txt" ]; then
     if [ -z "$1" ]; then
         read -p "Veuillez saisir le worker_id : " worker_id
     else
+        echo "Le worker_id \""$1"\" a été enregistré dans le fichier config.txt."
         echo "worker_id=$1" > config.txt
         worker_id="$1"
     fi
