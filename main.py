@@ -62,6 +62,10 @@ async def scheduled_main_loop(api, devices):
                                 time.sleep(1)
                     except Exception as e:
                         logger.warning(f"[main.py] - Une erreur s'est produite lors de la connexion de l'appareil Modbus: {e}")
+                        # Insérer pour chaque mesure une mesure None
+                        for measurement in device["measurements"]:
+                            database.insert_data(measurement["_id"], None)
+                            database.insert_measurement(measurement["_id"], "dead")
                         database.insert_device(device["_id"], "dead")
                         time.sleep(1)
                     try:
@@ -71,25 +75,35 @@ async def scheduled_main_loop(api, devices):
             if device["communication"]["protocol"] == "WebService":
                 web_service_device = WebServiceDevice(device["communication"]["configuration"]["url"])
                 try:
-                    data = web_service_device.getData()
-                    database.insert_device(device["_id"], "ok")
-                    for measurement in device["measurements"]:
-
-                        try:
-                            value = data[measurement["configuration"]["parameters"]["key"]]
-                            database.insert_data(measurement["_id"], value)
-                            database.insert_measurement(measurement["_id"], "ok")
-
-                        except Exception as e:  
-                            logger.warning(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web: {e}")
+                    success, data = web_service_device.getData()
+                    if success:
+                        database.insert_device(device["_id"], "ok")
+                        for measurement in device["measurements"]:
+                            try:
+                                value = data[measurement["configuration"]["parameters"]["key"]]
+                                database.insert_data(measurement["_id"], value)
+                                database.insert_measurement(measurement["_id"], "ok")
+                            except Exception as e:  
+                                logger.warning(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web: {e}")
+                                database.insert_data(measurement["_id"], None)
+                                database.insert_measurement(measurement["_id"], "dead")
+                                time.sleep(1)
+                    else:
+                        database.insert_device(device["_id"], "dead")
+                        # Insérer pour chaque mesure une mesure None et dead
+                        for measurement in device["measurements"]:
                             database.insert_data(measurement["_id"], None)
                             database.insert_measurement(measurement["_id"], "dead")
-                            time.sleep(1)
-                except Exception as e:
+                        logger.warning(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web")
 
+                except Exception as e:
                     logger.warning(f"[main.py] - Une erreur s'est produite lors de la récupération des données du service Web: {e}")
+                    for measurement in device["measurements"]:
+                        database.insert_data(measurement["_id"], None)
+                        database.insert_measurement(measurement["_id"], "dead")
                     database.insert_device(device["_id"], "dead")
                     time.sleep(1)
+
                     
     devices_status = {"devices": []}
 
@@ -142,25 +156,24 @@ async def scheduled_main_loop(api, devices):
             measurement_id = measurement["_id"]
             measurement_configuration = measurement["configuration"]
             response = {}
-
             if "min" in measurement_configuration["response_format"]:
                 try:
                     min_value = database.execute(f"SELECT MIN(value) FROM fields WHERE measurement = '{measurement_id}'")[0][0]
-                    response["min"] = min_value
+                    response["min"] = str(min_value)
                 except Exception as e:
                     logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération de la valeur minimale: {e}")
 
             if "max" in measurement_configuration["response_format"]:
                 try:
                     max_value = database.execute(f"SELECT MAX(value) FROM fields WHERE measurement = '{measurement_id}'")[0][0]
-                    response["max"] = max_value
+                    response["max"] = str(max_value)
                 except Exception as e:
                     logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération de la valeur maximale: {e}")
 
             if "avg" in measurement_configuration["response_format"]:
                 try:
                     avg_value = database.execute(f"SELECT AVG(value) FROM fields WHERE measurement = '{measurement_id}'")[0][0]
-                    response["avg"] = avg_value
+                    response["avg"] = str(avg_value)
                 except Exception as e:
                     logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération de la valeur moyenne: {e}")
 
@@ -168,19 +181,22 @@ async def scheduled_main_loop(api, devices):
                 try:
                     first_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY timestamp ASC LIMIT 1")[0][0]
                     last_value = database.execute(f"SELECT value FROM fields WHERE measurement = '{measurement_id}' ORDER BY timestamp DESC LIMIT 1")[0][0]
+                    # Si last_value et first_value sont des nombres, on peut calculer la différence
+                    if not isinstance(first_value, (int, float)) or not isinstance(last_value, (int, float)):
+                        response["diff"] = None
                     diff_value = last_value - first_value
-                    response["diff"] = diff_value
+                    response["diff"] = str(diff_value)
                 except Exception as e:
                     logger.error(f"[main.py] - Une erreur s'est produite lors de la récupération de la différence de valeur: {e}")
 
             # Ici, si la valeur de la mesure est un nombre, on peut ajouter la mesure à la liste des champs à envoyer à l'API
             # Sinon, on ne l'ajoute pas
             if "min" in response:
-                if response["min"] is not None:
+                if response["min"]:
                     # "timestamp" au format ISO 8601
                     fields["fields"].append({"measurement": measurement_id, "value": response, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
             if "diff" in response:
-                if response["diff"] is not None:
+                if response["diff"]:
                     fields["fields"].append({"measurement": measurement_id, "value": response, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
 
     fields_to_send.append(fields)
