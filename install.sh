@@ -36,6 +36,7 @@ if [ ! -f "config.txt" ]; then
         worker_id="$1"
     fi
     # Le deuxième paramètre est l'intervalle. S'il n'est pas passé, demander à l'utilisateur de le saisir
+    echo "Paramètre 2 (interval) : $2"
     if [[ -z "$2" ]]; then
         read -p "Veuillez saisir l'intervalle (en secondes) entre chaque envoi de données (par défaut : 1800 secondes) : " interval
     else
