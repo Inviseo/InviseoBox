@@ -28,35 +28,77 @@ echo "Paramètre 2 (interval) : $2"
 # Si le fichier "config.txt" n'existe pas
 if [ ! -f "config.txt" ]; then
     echo "Le fichier config.txt n'existe pas."
+
     # Le premier paramètre est le worker_id. S'il n'est pas passé, demander à l'utilisateur de le saisir
     if [[ -z "$1" ]]; then
         echo "Le worker_id n'a pas été passé en paramètre."
-        read -p "Veuillez saisir le worker_id : " worker_id
+        read -r -p "Veuillez saisir le worker_id : " worker_id
     else
-        echo "Le worker_id \""$1"\" a été enregistré dans le fichier config.txt."
+        # Le worker_id doit être un identifiant MongoDB, soit une chaîne de 24 caractères, composée de chiffres et de lettres minuscules
+        if ! [[ "$1" =~ ^[0-9a-f]{24}$ ]]; then
+            echo "Le worker_id doit être un identifiant MongoDB valide."
+            exit 1
+        fi
+
+        echo "Le worker_id ""$1"" a été enregistré dans le fichier config.txt."
         worker_id="$1"
     fi
+
     # Le deuxième paramètre est l'intervalle. S'il n'est pas passé, demander à l'utilisateur de le saisir
-    echo "Paramètre 2 (interval) : $2"
     if [[ -z "$2" ]]; then
         echo "L'intervalle n'a pas été passé en paramètre."
-        read -p "Veuillez saisir l'intervalle (en secondes) entre chaque envoi de données (par défaut : 1800 secondes) : " interval
+        read -r -p "Veuillez saisir l'intervalle (en secondes) entre chaque envoi de données (par défaut : 1800 secondes) : " interval
     else
-        if [[ ! -z "$interval" ]]; then
-            echo "Un intervalle de \""$2"\" a été enregistré dans le fichier config.txt."
-            interval="$2"
-        else
-            interval=1800
-            echo "L'intervalle par défaut (1800 secondes) a été enregistré dans le fichier config.txt."
-        fi
-        echo "worker_id=$1" > config.txt
-        echo "interval=$2" >> config.txt
         interval="$2"
     fi
+
+    # Si $interval est vide, le définir à 1800
+    if [[ -z "$interval" ]]; then
+        interval=1800
+    else
+        # Vérifier que l'intervalle est un nombre
+        if ! [[ "$interval" =~ ^[0-9]+$ ]]; then
+            echo "L'intervalle doit être un nombre."
+            exit 1
+        fi
+
+        # Vérifier que l'intervalle est supérieur à 0
+        if [ "$interval" -le 0 ]; then
+            echo "L'intervalle doit être supérieur à 0."
+            exit 1
+        fi
+        
+        echo "L'intervalle ""$interval"" a été enregistré dans le fichier config.txt."
+    fi
+    echo "worker_id=$1" > config.txt
+    echo "interval=$2" > config.txt
+    interval="$2"
 else
     # Sinon, récupérer le worker_id et l'intervalle depuis le fichier
     worker_id=$(grep -oP 'worker_id=\K.*' config.txt)
     interval=$(grep -oP 'interval=\K.*' config.txt)
+
+    # Vérifier que le worker_id est un identifiant MongoDB
+    if ! [[ "$worker_id" =~ ^[0-9a-f]{24}$ ]]; then
+        echo "Le worker_id doit être un identifiant MongoDB valide."
+        exit 1
+    fi
+
+    # Vérifier que l'intervalle est un nombre
+    if ! [[ "$interval" =~ ^[0-9]+$ ]]; then
+        echo "L'intervalle doit être un nombre."
+        exit 1
+    fi
+
+    # Vérifier que l'intervalle est supérieur à 0
+    if [ "$interval" -le 0 ]; then
+        echo "L'intervalle doit être supérieur à 0."
+        exit 1
+    fi
+
+    echo "Le worker_id et l'intervalle ont été récupérés depuis le fichier config.txt."
+    echo "worker_id : $worker_id"
+    echo "interval : $interval"
 fi
 
 
