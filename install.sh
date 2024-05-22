@@ -22,11 +22,8 @@ check_internet() {
 # dir = répertoire actuel
 dir=$(pwd)
 
-echo "Paramètre 1 (worker_id) : $1"
-echo "Paramètre 2 (interval) : $2"
-
-# Si le fichier "config.txt" n'existe pas
-if [ ! -f "config.txt" ]; then
+# Si le fichier "config.txt" n'existe pas ET que le fichier a été lancé par systemd
+if [ ! -f "config.txt" ] && [ "$(ps -o comm= $PPID)" != systemd ]; then
     echo "Le fichier config.txt n'existe pas."
 
     # Le premier paramètre est le worker_id. S'il n'est pas passé, demander à l'utilisateur de le saisir
@@ -159,6 +156,7 @@ cd inviseobox || {
 python -m venv venv
 
 # Activer le virtualenv
+# shellcheck source=/dev/null
 source venv/bin/activate
 
 # Installer les dépendances
