@@ -24,6 +24,7 @@ dir=$(pwd)
 
 # Si le fichier "config.txt" n'existe pas
 if [ ! -f "config.txt" ]; then
+    echo "Le fichier config.txt n'existe pas."
     # Le premier paramètre est le worker_id. S'il n'est pas passé, demander à l'utilisateur de le saisir
     if [ -z "$1" ]; then
         read -p "Veuillez saisir le worker_id : " worker_id
