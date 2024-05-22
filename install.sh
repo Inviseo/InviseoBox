@@ -22,82 +22,44 @@ check_internet() {
 # dir = répertoire actuel
 dir=$(pwd)
 
-# Si le fichier "config.txt" n'existe pas ET que le fichier a été lancé par systemd
-if [ ! -f "config.txt" ] && [ "$(ps -o comm= $PPID)" != systemd ]; then
-    echo "Le fichier config.txt n'existe pas."
-
-    # Le premier paramètre est le worker_id. S'il n'est pas passé, demander à l'utilisateur de le saisir
-    if [[ -z "$1" ]]; then
-        echo "Le worker_id n'a pas été passé en paramètre."
-        read -r -p "Veuillez saisir le worker_id : " worker_id
-    else
-        # Le worker_id doit être un identifiant MongoDB, soit une chaîne de 24 caractères, composée de chiffres et de lettres minuscules
-        if ! [[ "$1" =~ ^[0-9a-f]{24}$ ]]; then
-            echo "Le worker_id doit être un identifiant MongoDB valide."
-            exit 1
-        fi
-
-        echo "Le worker_id ""$1"" a été enregistré dans le fichier config.txt."
-        worker_id="$1"
-    fi
-
-    # Le deuxième paramètre est l'intervalle. S'il n'est pas passé, demander à l'utilisateur de le saisir
-    if [[ -z "$2" ]]; then
-        echo "L'intervalle n'a pas été passé en paramètre."
-        read -r -p "Veuillez saisir l'intervalle (en secondes) entre chaque envoi de données (par défaut : 1800 secondes) : " interval
-    else
-        interval="$2"
-    fi
-
-    # Si $interval est vide, le définir à 1800
-    if [[ -z "$interval" ]]; then
-        interval=1800
-    else
-        # Vérifier que l'intervalle est un nombre
-        if ! [[ "$interval" =~ ^[0-9]+$ ]]; then
-            echo "L'intervalle doit être un nombre."
-            exit 1
-        fi
-
-        # Vérifier que l'intervalle est supérieur à 0
-        if [ "$interval" -le 0 ]; then
-            echo "L'intervalle doit être supérieur à 0."
-            exit 1
-        fi
-        
-        echo "L'intervalle ""$interval"" a été enregistré dans le fichier config.txt."
-    fi
-    echo "worker_id=$1" > config.txt
-    echo "interval=$2" > config.txt
-    interval="$2"
-else
-    # Sinon, récupérer le worker_id et l'intervalle depuis le fichier
-    worker_id=$(grep -oP 'worker_id=\K.*' config.txt)
-    interval=$(grep -oP 'interval=\K.*' config.txt)
-
-    # Vérifier que le worker_id est un identifiant MongoDB
-    if ! [[ "$worker_id" =~ ^[0-9a-f]{24}$ ]]; then
-        echo "Le worker_id doit être un identifiant MongoDB valide."
+# Si le fichier n'a pas été lancé par systemd et qu'il n'a pas précisément 2 arguments, on quitte
+if [ "$(ps -o comm= $PPID)" != systemd ]; then
+    if [ "$#" -ne 2 ]; then
+        echo "Usage: sudo bash install.sh <worker_id> <interval>"
         exit 1
     fi
 
-    # Vérifier que l'intervalle est un nombre
+    # Récupérer les arguments
+    worker_id=$1
+    interval=$2
+
+    # Vérification de l'intégrité des arguments
+
+    # worker_id doit être un MongoDB ObjectId
+    if [[ ! "$worker_id" =~ ^[0-9a-fA-F]{24}$ ]]; then
+        echo "L'identifiant du worker doit être un ObjectId valide."
+        exit 1
+    fi
+
+    # interval doit être un entier positif
     if ! [[ "$interval" =~ ^[0-9]+$ ]]; then
-        echo "L'intervalle doit être un nombre."
+        echo "L'intervalle doit être un entier positif."
         exit 1
     fi
 
-    # Vérifier que l'intervalle est supérieur à 0
-    if [ "$interval" -le 0 ]; then
-        echo "L'intervalle doit être supérieur à 0."
+    # interval doit être compris entre 60 et 1800
+    if [ "$interval" -lt 60 ] || [ "$interval" -gt 1800 ]; then
+        echo "L'intervalle doit être compris entre 60 et 1800."
         exit 1
     fi
 
-    echo "Le worker_id et l'intervalle ont été récupérés depuis le fichier config.txt."
-    echo "worker_id : $worker_id"
-    echo "interval : $interval"
+    # Écrire les arguments dans un fichier
+    echo "worker_id=\"$worker_id\"" > config.txt
+    echo "interval=\"$interval\"" >> config.txt
 fi
 
+worker_id=$(grep worker_id config.txt | cut -d'=' -f2)
+interval=$(grep interval config.txt | cut -d'=' -f2)
 
 # Si le service n'existe pas, le créer
 if [ ! -f /etc/systemd/system/inviseo.service ]; then
@@ -142,8 +104,7 @@ if [ ! -f .env ]; then
 email=\"vincent@inviseo.fr\"
 password=\"runf86lq\"
 worker_id=\"$worker_id\"
-interval=\"$interval\"
-" > inviseobox/.env
+interval=\"$interval\"" > inviseobox/.env
     echo "Le fichier .env a été créé avec succès."
 fi
 
@@ -162,14 +123,21 @@ source venv/bin/activate
 # Installer les dépendances
 pip install -r requirements.txt
 
-echo "
+# Si le script n'a pas été lancé par systemd, afficher un message et redémarrer la machine
+if [ "$(ps -o comm= $PPID)" != systemd ]; then
+    echo "
 Installation terminée. Vous pourrez constater que la InvixéoBox est bien connectée via l'interface web :
 https://client.inviseo.fr/
 
 Un délai de 30 minutes est nécessaire pour que les données soient visibles sur la plateforme.
-Veuillez redémarrer la machine pour que le service soit démarré automatiquement :
-CTRL + C
-sudo reboot"
+La machine va redémarrer automatiquement dans 5 secondes."
+    for i in {5..1}; do
+        echo -n "$i..."
+        sleep 1
+    done
+    reboot
+fi
+
 
 # Lancer le worker
 sudo python main.py
