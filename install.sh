@@ -91,6 +91,7 @@ function ask_interval() {
     fi
 }
 
+ask_interval
 
 if [ ! -f .env ]; then
     echo "url=\"https://client.inviseo.fr/api\"
