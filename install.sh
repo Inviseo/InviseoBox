@@ -22,6 +22,26 @@ check_internet() {
 # dir = répertoire actuel
 dir=$(pwd)
 
+# Vérifier si "python" est installé
+if ! command -v python &> /dev/null; then
+    echo "Python n'est pas installé. Veuillez l'installer
+    sudo apt update
+    sudo apt install python3"
+    # Ne pas oublier de dire qu'il faut un lien symbolique de python3 à python
+    echo "Il est possible que vous ayez besoin de créer un lien symbolique de python3 à python.
+    sudo ln -s /usr/bin/python3 /usr/bin/python"
+    exit 1
+fi
+
+# Vérifier si git est installé
+if ! command -v git &> /dev/null; then
+    echo "Git n'est pas installé. Veuillez l'installer
+    sudo apt update
+    sudo apt install git"
+    exit 1
+fi
+
+
 # Si le fichier n'a pas été lancé par systemd et qu'il n'a pas précisément 2 arguments, on quitte
 if [ "$(ps -o comm= $PPID)" != systemd ]; then
     if [ "$#" -ne 2 ]; then
@@ -138,5 +158,5 @@ La machine va redémarrer automatiquement dans 5 secondes."
 fi
 
 
-# Lancer le worker
-sudo python main.py
+# Lancer le worker avec le chemin absolu du virtualenv
+sudo "$dir"/inviseobox/venv/bin/python "$dir"/inviseobox/main.py
