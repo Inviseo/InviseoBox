@@ -2,6 +2,7 @@ import os
 import time
 import json
 import asyncio
+import re
 from dotenv import load_dotenv
 from SQLiteDatabase import SQLiteDatabase
 from ModbusDevice import SerialRTUModbusDevice
@@ -33,6 +34,38 @@ def remove_from_json_file(file_path, data):
     if data in current_data:
         current_data.remove(data)
         save_json_file(file_path, current_data)
+
+def check_input_data():
+    worker_id = os.getenv('worker_id')
+    if worker_id is None:
+        raise Exception("L'identifiant du worker n'est pas défini.")
+    interval = os.getenv('interval')
+    if interval is None:
+        raise Exception("L'intervalle n'est pas défini.")
+    # Check that worker_id is a valid ObjectId
+    if (re.match(r'^[0-9a-fA-F]{24}$', worker_id) is None):
+        raise Exception("L'identifiant du worker doit être un ObjectId valide.")
+    # Check that the interval is a positive integer
+    if not interval.isdigit() or int(interval) <= 0:
+        raise Exception("L'intervalle doit être un entier positif.")
+
+    # Url must be defined and valid
+    url = os.getenv('url')
+    if url is None:
+        raise Exception("L'url n'est pas définie.")
+    if not re.match(r'^https?://', url):
+        raise Exception("L'url doit commencer par http:// ou https://")
+    
+    # Email must be defined
+    email = os.getenv('email')
+    if email is None:
+        raise Exception("L'email n'est pas défini.")
+    
+    # Password must be defined
+    password = os.getenv('password')
+    if password is None:
+        raise Exception("Le mot de passe n'est pas défini.")
+
 
 # Initialisation des fichiers de JSON
 devices_status_file = 'device_status_to_send.json'
@@ -207,6 +240,7 @@ async def scheduled_main_loop(api, devices, interval=1800):
 async def main_execution_thread():
     try:
         load_dotenv()
+        check_input_data()
         interval = int(os.getenv("interval"))
         api = API(os.getenv("url"), os.getenv("email"), os.getenv("password"), os.getenv("worker_id"), logger)
         api.get_token()
