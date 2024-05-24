@@ -28,6 +28,13 @@ class Logger:
 
         # Add the file handler to the logger
         self.logger.addHandler(file_handler)
+
+        # Add a console handler
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(self.log_level)
+        console_handler.setFormatter(formatter)
+        self.logger.addHandler(console_handler)
+
         
     def info(self, message):
         self.logger.info(message)
