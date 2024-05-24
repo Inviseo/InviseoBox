@@ -1,0 +1,23 @@
+version: "3"
+services:
+  senseo-box:
+    image: ghcr.io/inviseo/inviseobox:latest
+    container_name: inviseobox
+    privileged: true
+    user: root
+    restart: always
+    pull_policy: always
+    environment:
+      - worker_id=XXXXXXXXXXXXXXXXXXX
+      - interval=1800
+      - url=https://client.inviseo.fr/api
+      - email=XXXXXXXXXXXXXXXXXXX
+      - password=XXXXXXXXXXXXXXXXXXX
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/inviseo/.docker/config.json:/config.json
+    command: --interval 5 --debug  --cleanup inviseobox
