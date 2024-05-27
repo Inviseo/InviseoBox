@@ -2,6 +2,7 @@ import os
 import time
 import json
 import asyncio
+import re
 from dotenv import load_dotenv
 from SQLiteDatabase import SQLiteDatabase
 from ModbusDevice import SerialRTUModbusDevice
@@ -34,6 +35,27 @@ def remove_from_json_file(file_path, data):
         current_data.remove(data)
         save_json_file(file_path, current_data)
 
+def check_input_data():
+    token = os.getenv('token')
+    if token is None:
+        raise Exception("Le token n'est pas défini.")
+    if not re.match(r'^[0-9a-f]{64}$', token):
+        raise Exception("Le token doit contenir 32 caractères hexadécimaux.")
+    
+    interval = os.getenv('interval')
+    if interval is None:
+        raise Exception("L'intervalle n'est pas défini.")
+    if not interval.isdigit() or int(interval) <= 0:
+        raise Exception("L'intervalle doit être un entier positif.")
+
+    # Url must be defined and valid
+    url = os.getenv('url')
+    if url is None:
+        raise Exception("L'url n'est pas définie.")
+    if not re.match(r'^https?://', url):
+        raise Exception("L'url doit commencer par http:// ou https://")
+
+
 # Initialisation des fichiers de JSON
 devices_status_file = 'device_status_to_send.json'
 fields_file = 'fields_to_send.json'
@@ -41,7 +63,7 @@ devices_status_to_send = load_json_file(devices_status_file)
 fields_to_send = load_json_file(fields_file)
 
 async def handle_modbus_device(device, database):
-    modbus_device = SerialRTUModbusDevice(**device["communication"]["configuration"])
+    modbus_device = SerialRTUModbusDevice(**device["communication"]["configuration"], logger=logger)
     try:
         await modbus_device.connect()
         database.insert_device(device["_id"], "ok")
@@ -69,7 +91,7 @@ async def handle_modbus_device(device, database):
             logger.error(f"[main.py] - Erreur de déconnexion Modbus: {e}")
 
 async def handle_web_service_device(device, database):
-    web_service_device = WebServiceDevice(device["communication"]["configuration"]["url"])
+    web_service_device = WebServiceDevice(device["communication"]["configuration"]["url"], logger=logger)
     try:
         success, data = web_service_device.getData()
         if success:
@@ -171,7 +193,7 @@ def build_fields(database, devices):
 async def scheduled_main_loop(api, devices, interval=1800):
     logger.info("[main.py] - Début de la boucle principale")
     start_time = time.time()
-    database = SQLiteDatabase("data.db")
+    database = SQLiteDatabase("data.db", logger=logger)
 
     while time.time() - start_time < interval:
         for device in devices:
@@ -207,9 +229,9 @@ async def scheduled_main_loop(api, devices, interval=1800):
 async def main_execution_thread():
     try:
         load_dotenv()
+        check_input_data()
         interval = int(os.getenv("interval"))
-        api = API(os.getenv("url"), os.getenv("email"), os.getenv("password"), os.getenv("worker_id"), logger)
-        api.get_token()
+        api = API(os.getenv("url"), os.getenv("token"), logger=logger)
         devices = api.get_devices()
     except Exception as e:
         logger.error(f"[main.py] - Une erreur s'est produite lors de l'initialisation: {e}")

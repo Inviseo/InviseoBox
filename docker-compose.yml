@@ -1,0 +1,18 @@
+version: "3"
+services:
+  inviseoboxbox:
+    image: ghcr.io/inviseo/inviseobox:latest
+    container_name: inviseobox
+    privileged: true
+    user: root
+    restart: always
+    pull_policy: always
+    environment:
+      - token=XXXXXXXXXXXXXXXXXXX
+      - interval=1800
+      - url=XXXXXXXXXXXXXXXXXXX
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    restart: always
+    command: --interval 5 --debug  --cleanup inviseobox

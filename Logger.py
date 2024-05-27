@@ -16,18 +16,26 @@ class Logger:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(self.log_level)
 
-        # Create a rotating file handler
-        file_handler = RotatingFileHandler(self.log_file, maxBytes=max_bytes, backupCount=backup_count)
-        file_handler.setLevel(self.log_level)
+        # Check if the logger already has handlers
+        if not self.logger.hasHandlers():
+            # Create a rotating file handler
+            file_handler = RotatingFileHandler(self.log_file, maxBytes=max_bytes, backupCount=backup_count)
+            file_handler.setLevel(self.log_level)
 
-        # Create a formatter
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+            # Create a formatter
+            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
-        # Add the formatter to the file handler
-        file_handler.setFormatter(formatter)
+            # Add the formatter to the file handler
+            file_handler.setFormatter(formatter)
 
-        # Add the file handler to the logger
-        self.logger.addHandler(file_handler)
+            # Add the file handler to the logger
+            self.logger.addHandler(file_handler)
+
+            # Add a console handler
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(self.log_level)
+            console_handler.setFormatter(formatter)
+            self.logger.addHandler(console_handler)
         
     def info(self, message):
         self.logger.info(message)
