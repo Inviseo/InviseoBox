@@ -25,8 +25,14 @@ class API:
             except requests.exceptions.TooManyRedirects:
                 self.logger.error("[API.py] - Trop de redirections lors de la récupération des appareils (URL incorrecte)")
                 break
+            except requests.exceptions.ConnectionError as e:
+                self.logger.error(f"[API.py] - Une erreur s'est produite lors de la récupération des appareils: {e}")
+                break
             except requests.exceptions.RequestException as e:
                 self.logger.error(f"[API.py] - Une erreur s'est produite lors de la récupération des appareils: {e}")
+                break
+            except Exception as e:
+                self.logger.error(f"[API.py] - Une erreur inattendue s'est produite lors de la récupération des appareils: {e}")
                 break
 
     def send_devices_status(self, status):
@@ -34,25 +40,35 @@ class API:
             payload = {"token": self.token, "status": status}
             response = requests.post(f"{self.url}/devices/status", json=payload)
             response.raise_for_status()
+            return True
         except requests.exceptions.HTTPError as e:
             self.logger.error(f"[API.py] - Une erreur s'est produite lors de l'enregistrement du statut des appareils: {e}")
         except requests.exceptions.Timeout:
             self.logger.error("[API.py] - Timeout lors de l'enregistrement du statut des appareils")
         except requests.exceptions.TooManyRedirects:
             self.logger.error("[API.py] - Trop de redirections lors de l'enregistrement du statut des appareils (URL incorrecte)")
+        except requests.exceptions.ConnectionError as e:
+            self.logger.error(f"[API.py] - Une erreur s'est produite lors de la récupération des appareils: {e}")
         except requests.exceptions.RequestException as e:
             self.logger.error(f"[API.py] - Une erreur s'est produite lors de l'enregistrement du statut des appareils: {e}")
-
+        except Exception as e:
+            self.logger.error(f"[API.py] - Une erreur inattendue s'est produite lors de l'enregistrement du statut des appareils: {e}")
+    
     def send_fields(self, fields):
         try:
             payload = {"token": self.token, "fields": fields}
             response = requests.post(f"{self.url}/fields/bulk", json=payload)
             response.raise_for_status()
+            return True
         except requests.exceptions.HTTPError as e:
             self.logger.error(f"[API.py] - Une erreur s'est produite lors de l'envoi des données: {e}")
         except requests.exceptions.Timeout:
             self.logger.error("[API.py] - Timeout lors de l'envoi des données")
         except requests.exceptions.TooManyRedirects:
             self.logger.error("[API.py] - Trop de redirections lors de l'envoi des données (URL incorrecte)")
+        except requests.exceptions.ConnectionError as e:
+            self.logger.error(f"[API.py] - Une erreur s'est produite lors de l'envoi des données: {e}")
         except requests.exceptions.RequestException as e:
             self.logger.error(f"[API.py] - Une erreur s'est produite lors de l'envoi des données: {e}")
+        except Exception as e:
+            self.logger.error(f"[API.py] - Une erreur inattendue s'est produite lors de l'envoi des données: {e}")

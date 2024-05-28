@@ -207,9 +207,9 @@ async def scheduled_main_loop(api, devices, interval=1800):
     append_to_json_file(devices_status_file, devices_status)
     try:
         for status in devices_status_to_send:
-            api.send_devices_status(status)
-            devices_status_to_send.remove(status)
-            remove_from_json_file(devices_status_file, status)
+            if api.send_devices_status(status):
+                devices_status_to_send.remove(status)
+                remove_from_json_file(devices_status_file, status)
     except Exception as e:
         logger.error(f"[main.py] - Erreur d'envoi du statut des appareils: {e}")
 
@@ -218,9 +218,9 @@ async def scheduled_main_loop(api, devices, interval=1800):
     append_to_json_file(fields_file, fields)
     try:
         for field in fields_to_send:
-            api.send_fields(field)
-            fields_to_send.remove(field)
-            remove_from_json_file(fields_file, field)
+            if api.send_fields(field):
+                fields_to_send.remove(field)
+                remove_from_json_file(fields_file, field)
     except Exception as e:
         logger.error(f"[main.py] - Erreur d'envoi des données: {e}")
 
