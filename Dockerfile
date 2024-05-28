@@ -11,4 +11,4 @@ COPY . /inviseobox
 # Installez les dépendances de l'application
 RUN apt update -y && apt upgrade -y  && pip install --no-cache-dir -r requirements.txt
 
-ENTRYPOINT ["python3", "main.py"]
+ENTRYPOINT ["python3", "src/main.py"]

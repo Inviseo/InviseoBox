@@ -2,3 +2,6 @@ pymodbus
 pyserial
 requests
 python-dotenv
+pytest
+requests-mock
+pytest-asyncio

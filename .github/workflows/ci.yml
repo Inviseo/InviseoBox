@@ -1,31 +1,32 @@
-name: Build and publish a Docker image to ghcr.io
-on:
-  # publish on releases, e.g. v2.1.13 (image tagged as "2.1.13" - "v" prefix is removed)
-  release:
-    types: [published]
+name: CI
 
-  # publish on pushes to the main branch (image tagged as "latest")
+on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
 jobs:
-  docker_publish:
-    runs-on: "ubuntu-20.04"
-    permissions:
-      contents: read
-      packages: write
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      # https://github.com/marketplace/actions/push-to-ghcr
-      - name: Build and publish a Docker image for ${{ github.repository }}
-        uses: macbre/push-to-ghcr@master
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
         with:
-          image_name: ${{ github.repository }} # it will be lowercased internally 
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # optionally push to the Docker Hub (docker.io)
-          # docker_io_token: ${{ secrets.DOCKER_IO_ACCESS_TOKEN }}  # see https://hub.docker.com/settings/security
-          # customize the username to be used when pushing to the Docker Hub
-          # docker_io_user: foobar  # see https://github.com/macbre/push-to-ghcr/issues/14
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest test/  # Replace with the path to your test directory if needed
