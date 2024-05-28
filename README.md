@@ -7,18 +7,40 @@ Un service léger et non-intrusif installé sur le client pour récupérer et en
 Il suffit d'exécuter cette ligne de commande :
 
 ```bash
-curl -H "Authorization: token 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" https://raw.githubusercontent.com/inviseo/inviseobox/main/install.sh -o install.sh && sudo bash install.sh <worder-id> <interval>
+git clone https://github.com/inviseo/inviseobox/ && cd inviseobox && nano docker-compose.yml
 ```
 
-En précisant le `<worder-id>` de la box à installer, obtenu lors de la création de la box sur le serveur Inviseo, et l'`<interval>` de temps en secondes entre chaque envoi de données.
+### 📝 Configuration
+
+Modifiez le fichier `docker-compose.yml` pour ajouter les variables d'environnement suivantes :
+
+```yaml
+version: "3"
+services:
+  inviseoboxbox:
+    image: ghcr.io/inviseo/inviseobox:latest
+    container_name: inviseobox
+    privileged: true
+    user: root
+    restart: always
+    pull_policy: always
+    environment:
+      - token=<INVISEOBOX_TOKEN>
+      - interval=1800
+      - url=<API_URL>
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    restart: always
+    command: --interval 5 --debug  --cleanup inviseobox
+```
 
 ### 📝 Logs
 
-Les logs sont stockés dans ``./inviseobox.log``.
-Pour les consulter, vous pouvez utiliser la commande suivante :
+Les logs sont accessibles grâce à la commande suivante :
 
 ```bash
-tail -f inviseobox.log
+docker logs inviseobox
 ```
 
 ## 🛠️ Installation (Développement)
