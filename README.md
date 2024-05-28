@@ -7,7 +7,7 @@ Un service léger et non-intrusif installé sur le client pour récupérer et en
 Il suffit d'exécuter cette ligne de commande :
 
 ```bash
-git clone https://github.com/inviseo/inviseobox/ && cd inviseobox && nano docker-compose.yml
+git clone https://github.com/inviseo/inviseobox/ && cd inviseobox
 ```
 
 ### 📝 Configuration
