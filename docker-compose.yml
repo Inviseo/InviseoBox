@@ -10,6 +10,9 @@ services:
       - token=XXXXXXXXXXXXXXXXXXX
       - interval=1800
       - url=XXXXXXXXXXXXXXXXXXX
+    # On monte le dossier /dev sur le container pour pouvoir utiliser les devices USB
+    volumes:
+      - /dev:/dev
 
   watchtower:
     image: containrrr/watchtower:latest
