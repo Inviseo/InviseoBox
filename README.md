@@ -9,10 +9,19 @@ Il suffit d'exécuter cette ligne de commande :
 ```bash
 git clone https://github.com/inviseo/inviseobox/ && cd inviseobox
 ```
+Puis vous devrez modifier le fichier `docker-compose.yml` pour ajouter les variables d'environnement (voir ci-dessous).
+```bash
+nano docker-compose.yml
+```
+
+Enfin, exécutez la commande suivante :
+```bash
+docker-compose up -d
+```
 
 ### 📝 Configuration
 
-Modifiez le fichier `docker-compose.yml` pour ajouter les variables d'environnement suivantes :
+Modifiez le fichier `docker-compose.yml` pour ajouter les variables d'environnement suivantes, \<INVISEOBOX_TOKEN> et \<API_URL> (SURTOUT ne pas ajouter de / après l'URL. Vous pouvez faire comme l'exemple suivant : ``https://domaine.com/api``):
 
 ```yaml
 version: "3"
