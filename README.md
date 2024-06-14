@@ -53,6 +53,12 @@ Enfin, exécutez la commande suivante :
 docker-compose up -d
 ```
 
+Executer le démarrage automatique du service docker
+
+```bash
+sudo systemctl start docker
+```
+
 ### 📝 Configuration
 
 Modifiez le fichier `docker-compose.yml` pour ajouter les variables d'environnement suivantes, \<INVISEOBOX_TOKEN> et \<API_URL> (SURTOUT ne pas ajouter de / après l'URL. Vous pouvez faire comme l'exemple suivant : ``https://domaine.com/api``):
