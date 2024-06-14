@@ -4,11 +4,45 @@ Un service léger et non-intrusif installé sur le client pour récupérer et en
 
 ## 🚀 Installation (Production)
 
-Il suffit d'exécuter cette ligne de commande :
+Il suffit d'exécuter les lignes de commande :
+
+```bash
+# passer en root
+su root
+```
+
+```bash
+# installation de docker, sudo et git
+apt-get install git docker docker-compose docker.io docker-clean docker-doc docker-registry docker sudo -y
+# installer le user inviseo en sudo
+sudo visudo
+```
+
+Entrer la ligne suivante dans le fichier a hauteur de la liste des utilisateurs : 
+`inviseo ALL=(ALL:ALL) ALL`
+
+Taper ctrl + o et ctrl + x
+
+Executer exit
+
+```bash
+exit
+```
+
+Coller le depot de script `InviseoBoxScripts`
+
+```bash
+git clone https://github.com/Inviseo/inviseoBoxScripts.git
+cd inviseoBoxScripts
+sudo chmod a+x *
+sudo ./switchSleepMode.sh # Répondre Yes
+sudo ./switchGraphicalInterface.sh # Répondre No
+```
 
 ```bash
 git clone https://github.com/inviseo/inviseobox/ && cd inviseobox
 ```
+
 Puis vous devrez modifier le fichier `docker-compose.yml` pour ajouter les variables d'environnement (voir ci-dessous).
 ```bash
 nano docker-compose.yml
