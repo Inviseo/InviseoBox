@@ -50,7 +50,7 @@ nano docker-compose.yml
 
 Enfin, exécutez la commande suivante :
 ```bash
-docker-compose up -d
+sudo docker-compose up -d
 ```
 
 Executer le démarrage automatique du service docker
@@ -89,7 +89,7 @@ services:
 Les logs sont accessibles grâce à la commande suivante :
 
 ```bash
-docker logs inviseobox
+sudo docker logs inviseobox
 ```
 
 ## 🛠️ Installation (Développement)
