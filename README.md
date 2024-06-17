@@ -40,6 +40,7 @@ sudo ./switchGraphicalInterface.sh # Répondre No
 ```
 
 ```bash
+cd /home/inviseo
 git clone https://github.com/inviseo/inviseobox/ && cd inviseobox
 ```
 
