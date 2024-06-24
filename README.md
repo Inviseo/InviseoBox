@@ -4,6 +4,8 @@ Un service léger et non-intrusif installé sur le client pour récupérer et en
 
 ## 🚀 Installation (Production)
 
+Suivre la procédure d'installation d'un nouveau système pour la inviseobox [Procédure](./procedure_installation_inviseobox.md)
+
 Il suffit d'exécuter les lignes de commande :
 
 ```bash
