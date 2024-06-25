@@ -64,7 +64,8 @@ sudo systemctl start docker
 
 ### 📝 Configuration
 
-Modifiez le fichier `docker-compose.yml` pour ajouter les variables d'environnement suivantes, \<INVISEOBOX_TOKEN> et \<API_URL> (SURTOUT ne pas ajouter de / après l'URL. Vous pouvez faire comme l'exemple suivant : ``https://domaine.com/api``):
+Modifiez le fichier `docker-compose.yml` pour ajouter les variables d'environnement suivantes, \<INVISEOBOX_TOKEN> et \<API_URL> (SURTOUT ne pas ajouter de / après l'URL. Vous pouvez faire comme l'exemple suivant : ``https://domaine.com/api``).
+`interval` est la valeur en seconde de délai entre chaque envoie vers le serveur distant. Il ne peut être négatif ou égal à zéro.
 
 ```yaml
 version: "3"
