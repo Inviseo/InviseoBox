@@ -190,10 +190,13 @@ def build_fields(database, devices):
             fields["fields"].append({"measurement": measurement_id, "value": response, "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S")})
     return fields
 
-async def scheduled_main_loop(api, devices, interval=1800):
+async def scheduled_main_loop(api, interval=1800):
     logger.info("[main.py] - Début de la boucle principale")
     start_time = time.time()
     database = SQLiteDatabase("data.db", logger=logger)
+
+    # Mettre à jour les devices
+    devices = api.get_devices()
 
     while time.time() - start_time < interval:
         for device in devices:
@@ -224,7 +227,7 @@ async def scheduled_main_loop(api, devices, interval=1800):
     except Exception as e:
         logger.error(f"[main.py] - Erreur d'envoi des données: {e}")
 
-    await scheduled_main_loop(api, devices, interval)
+    await scheduled_main_loop(api, interval)
 
 async def main_execution_thread():
     try:
@@ -232,14 +235,13 @@ async def main_execution_thread():
         check_input_data()
         interval = int(os.getenv("interval"))
         api = API(os.getenv("url"), os.getenv("token"), logger=logger)
-        devices = api.get_devices()
     except Exception as e:
         logger.error(f"[main.py] - Une erreur s'est produite lors de l'initialisation: {e}")
         time.sleep(5)
         await main_execution_thread()
     
     try:
-        await scheduled_main_loop(api, devices, interval)
+        await scheduled_main_loop(api, interval)
     except Exception as e:
         logger.error(f"[main.py] - Une erreur s'est produite lors de l'exécution de la boucle principale: {e}")
 
