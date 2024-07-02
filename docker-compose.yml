@@ -15,6 +15,7 @@ services:
 
   watchtower:
     image: containrrr/watchtower:latest
+    container_name: watchtower
     restart: always
     command: --interval 5 --debug  --cleanup inviseobox
     volumes:
