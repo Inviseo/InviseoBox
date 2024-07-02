@@ -10,7 +10,6 @@ services:
       - token=XXXXXXXXXXXXXXXXXXX
       - interval=1800
       - url=XXXXXXXXXXXXXXXXXXX
-    # On monte le dossier /dev sur le container pour pouvoir utiliser les devices USB
     volumes:
       - /dev:/dev
 
@@ -18,3 +17,5 @@ services:
     image: containrrr/watchtower:latest
     restart: always
     command: --interval 5 --debug  --cleanup inviseobox
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
