@@ -34,11 +34,8 @@ exit
 Coller le depot de script `InviseoBoxScripts`
 
 ```bash
-git clone https://github.com/Inviseo/inviseoBoxScripts.git
-cd inviseoBoxScripts
-sudo chmod a+x *
-sudo ./switchSleepMode.sh # Répondre Yes
-sudo ./switchGraphicalInterface.sh # Répondre No
+sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+sudo systemctl set-default multi-user.target
 ```
 
 ```bash
@@ -86,7 +83,29 @@ services:
     image: containrrr/watchtower:latest
     restart: always
     command: --interval 5 --debug  --cleanup inviseobox
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 ```
+
+### 📦 Variables d'environnement
+
+- `token` : Token d'authentification de la InviseoBox, renvoyé par le serveur Inviseo lors de la création de la InviseoBox. Il est présent dans ``workers.token``.
+- `interval` : Délai en seconde entre chaque envoie de données vers le serveur Inviseo.
+- `url` : URL de l'API Inviseo, sans le `/` à la fin.
+
+### 📦 Algorithimique
+
+Cet algorithme boucle :
+- Instancier la base de données SQLite
+- Récupérer les données des appareils (GET) : ``/api/workers/devices/data/token?=<TOKEN>`
+- Pendant `<interval>` secondes :
+  - Pour chaque appareil, pour chaque mesure :
+    - Insérer les données relatives à l'appareil
+    - Insérer les données relatives à la mesure
+    - Insérer les données temporaires dans la base de données
+- Aggréger les données en fonction de la configuration de la mesure
+- Envoyer les données relatives à l'appareil et aux mesures (POST) : ``/api/devices/status``
+- Envoyer les données aggrégées vers le serveur Inviseo (POST) : ``/api/fields/``
 
 ### 📝 Logs
 
