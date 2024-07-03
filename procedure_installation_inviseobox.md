@@ -10,7 +10,7 @@ Télécharger l'image `ISO`.
 Préparer une clé bootable (prévoyez une clé USB d'une capacité comprise en 8 et 16GO).
 
 Pour créer une clé bootable il existe plusieurs moyens.
-Une facon simple est d'utiliser uen interface graphique portable et cross platforme comme [BalenaEtcher](https://etcher.balena.io/)
+Une facon simple est d'utiliser une interface graphique portable et cross platforme comme [BalenaEtcher](https://etcher.balena.io/)
 
 Une fois la clé bootable prête, munissez-vous d'un dell wyse (aujourd'hui nous les utilisons).
 
@@ -18,7 +18,7 @@ Brancher ecran, clavier, souris et alimentation.
 
 Lancer le dell wyse en appuyant sur le bouton d'alimentation.
 
-Marteler la touche `supp` sur clavier pour lacer le `BIOS`.
+Marteler la touche `supp` sur clavier pour lancer le `BIOS`.
 
 Le mot de passe du `BIOS` pour ces appareils est `Fireport`
 
