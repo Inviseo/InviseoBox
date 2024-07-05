@@ -20,7 +20,7 @@ apt-get install git docker docker-compose docker.io docker-clean docker-doc dock
 sudo visudo
 ```
 
-Entrer la ligne suivante dans le fichier a hauteur de la liste des utilisateurs : 
+Entrer la ligne suivante dans le fichier a hauteur de la liste des utilisateurs :
 `inviseo ALL=(ALL:ALL) ALL`
 
 Taper ctrl + o et ctrl + x
@@ -44,11 +44,13 @@ git clone https://github.com/inviseo/inviseobox/ && cd inviseobox
 ```
 
 Puis vous devrez modifier le fichier `docker-compose.yml` pour ajouter les variables d'environnement (voir ci-dessous).
+
 ```bash
 nano docker-compose.yml
 ```
 
 Enfin, exécutez la commande suivante :
+
 ```bash
 sudo docker-compose up -d
 ```
@@ -61,7 +63,7 @@ sudo systemctl start docker
 
 ### 📝 Configuration
 
-Modifiez le fichier `docker-compose.yml` pour ajouter les variables d'environnement suivantes, \<INVISEOBOX_TOKEN> et \<API_URL> (SURTOUT ne pas ajouter de / après l'URL. Vous pouvez faire comme l'exemple suivant : ``https://domaine.com/api``).
+Modifiez le fichier `docker-compose.yml` pour ajouter les variables d'environnement suivantes, \<INVISEOBOX_TOKEN> et \<API_URL> (SURTOUT ne pas ajouter de / après l'URL. Vous pouvez faire comme l'exemple suivant : `https://domaine.com/api`).
 `interval` est la valeur en seconde de délai entre chaque envoie vers le serveur distant. Il ne peut être négatif ou égal à zéro.
 
 ```yaml
@@ -89,13 +91,20 @@ services:
 
 ### 📦 Variables d'environnement
 
-- `token` : Token d'authentification de la InviseoBox, renvoyé par le serveur Inviseo lors de la création de la InviseoBox. Il est présent dans ``workers.token``.
+- `token` : Token d'authentification de la InviseoBox, renvoyé par le serveur Inviseo lors de la création de la InviseoBox. Il est présent dans `workers.token`.
 - `interval` : Délai en seconde entre chaque envoie de données vers le serveur Inviseo.
 - `url` : URL de l'API Inviseo, sans le `/` à la fin.
 
-### 📦 Algorithimique
+### 📦 Fonctionnement et algorithimique
+
+Tout d'abord, l'image watchtower permet de mettre à jour automatiquement l'image de la InviseoBox. Il est recommandé de la laisser dans le fichier `docker-compose.yml`. Cependant, le socket Docker doit être monté pour que Watchtower fonctionne correctement. Le chemin du socket Docker est par défaut `/var/run/docker.sock`, mais il peut être différent selon la configuration de votre système, donc il faut vérifier pour chaque installation.
+
+Watchtower vérifie toutes les 5 secondes si une nouvelle version de l'image de la InviseoBox est disponible. Si c'est le cas, il télécharge la nouvelle image et redémarre le conteneur. Cette nouvelle image est téléchargée depuis le GitHub Container Registry (ghcr.io), elle même pushée depuis le GitHub Actions via l'action `macbre/push-to-ghcr`. Watchtower est configuré pour tirer la dernière image de la InviseoBox sur la branche `main` exclusivement.
+
+La InviséoBox correctement configurée exécute un algorithme en boucle pour récupérer les données des appareils et les envoyer vers le serveur Inviseo.
 
 Cet algorithme boucle :
+
 - Instancier la base de données SQLite
 - Récupérer les données des appareils (GET) : ``/api/workers/devices/data/token?=<TOKEN>`
 - Pendant `<interval>` secondes :
@@ -104,8 +113,8 @@ Cet algorithme boucle :
     - Insérer les données relatives à la mesure
     - Insérer les données temporaires dans la base de données
 - Aggréger les données en fonction de la configuration de la mesure
-- Envoyer les données relatives à l'appareil et aux mesures (POST) : ``/api/devices/status``
-- Envoyer les données aggrégées vers le serveur Inviseo (POST) : ``/api/fields/``
+- Envoyer les données relatives à l'appareil et aux mesures (POST) : `/api/devices/status`
+- Envoyer les données aggrégées vers le serveur Inviseo (POST) : `/api/fields/`
 
 ### 📝 Logs
 
