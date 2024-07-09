@@ -124,6 +124,73 @@ Les logs sont accessibles grâce à la commande suivante :
 sudo docker logs inviseobox
 ```
 
+### Mise à jour (inviseoBox existante)
+
+Pour mettre à jour le micro logiciel d'une inviseobox déjà en place suivez les étapes suivantes :
+
+#### Down les containers
+
+Il est très important d'arreter les containers sur la inviseoBox
+
+Placez vous dans le dossier inviseobox 
+
+```bash
+cd inviseobox
+```
+
+et lancer la commande 
+
+```bash
+sudo docker-compose down
+```
+
+Le mot de passe par défaut de l'utilisateur inviseo est `inviseo`
+Attention vous ne verrez pas de mot de passe se taper.
+
+#### Supprimer le dossier inviseobox
+
+Attention avant la suppression prenez soin de copier le fichier `docker-compose.yml` car la configuration du client est dedans.
+
+```bash
+cp docker-compose.yml ~/inviseo/docker-compose_save.yml
+```
+
+Supprimer le dossier `inviseobox` pour eviter les conflits
+
+```bash
+cd ~/inviseo && sudo rm -rf inviseobox
+```
+
+#### Recloner le depot
+
+Recloner le depot public
+
+```bash
+git clone https://github.com/inviseo/inviseobox/ && cd inviseobox
+```
+
+#### Copier l'ancienne configuration
+
+Executer commande
+
+```bash
+cp docker-compose.yml ~/inviseo/inviseobox/
+```
+
+#### Redémarrer les containers
+
+```bash
+sudo docker-compose up -d
+```
+
+#### Vérification
+
+Vérifier que tout c'est bien passé
+
+```bash
+sudo docker logs inviseobox
+````
+
 ## 🛠️ Installation (Développement)
 
 Installer les dépendances :
