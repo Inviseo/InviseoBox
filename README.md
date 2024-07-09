@@ -174,7 +174,13 @@ git clone https://github.com/inviseo/inviseobox/ && cd inviseobox
 Executer commande
 
 ```bash
-cp docker-compose.yml ~/inviseo/inviseobox/
+cp docker-compose_save.yml ~/inviseo/inviseobox/
+```
+
+N'oubliez pas de renommer le fichier comme avant
+
+```bash
+sudo mv docker-compose_save.yml docker-compose.yml
 ```
 
 #### Redémarrer les containers
