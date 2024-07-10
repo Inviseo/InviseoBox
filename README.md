@@ -158,6 +158,7 @@ cp docker-compose.yml ~/inviseo/docker-compose_save.yml
 Supprimer le dossier `inviseobox` pour eviter les conflits
 
 ```bash
+cd ..
 cd ~/inviseo && sudo rm -rf inviseobox
 ```
 
@@ -166,7 +167,7 @@ cd ~/inviseo && sudo rm -rf inviseobox
 Recloner le depot public
 
 ```bash
-git clone https://github.com/inviseo/inviseobox/ && cd inviseobox
+git clone https://github.com/inviseo/inviseobox/
 ```
 
 #### Copier l'ancienne configuration
@@ -175,6 +176,7 @@ Executer commande
 
 ```bash
 cp docker-compose_save.yml ~/inviseo/inviseobox/
+cd inviseobox
 ```
 
 N'oubliez pas de renommer le fichier comme avant
