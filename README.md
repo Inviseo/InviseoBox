@@ -8,6 +8,8 @@ Suivre la procédure d'installation d'un nouveau système pour la inviseobox [Pr
 
 Il suffit d'exécuter les lignes de commande :
 
+Connectez-vous au compte utilisateur inviseo sur la `inviseoBox`
+
 ```bash
 # passer en root
 su root
@@ -15,7 +17,7 @@ su root
 
 ```bash
 # installation de docker, sudo et git
-apt-get install git docker docker-compose docker.io docker-clean docker-doc docker-registry docker sudo -y
+apt-get install git docker docker-compose docker.io docker-clean docker-doc docker-registry sudo -y
 # installer le user inviseo en sudo
 sudo visudo
 ```
@@ -25,7 +27,7 @@ Entrer la ligne suivante dans le fichier a hauteur de la liste des utilisateurs 
 
 Taper ctrl + o et ctrl + x
 
-Executer exit
+Executer exit pourrevenir sur l'utilisateur inviseo
 
 ```bash
 exit
