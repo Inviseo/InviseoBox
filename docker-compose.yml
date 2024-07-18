@@ -8,7 +8,6 @@ services:
     pull_policy: always
     environment:
       - token=XXXXXXXXXXXXXXXXXXX
-      - interval=1800
       - url=XXXXXXXXXXXXXXXXXXX
     volumes:
       - /dev:/dev

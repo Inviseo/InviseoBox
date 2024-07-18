@@ -72,3 +72,24 @@ class API:
             self.logger.error(f"[API.py] - Une erreur s'est produite lors de l'envoi des données: {e}")
         except Exception as e:
             self.logger.error(f"[API.py] - Une erreur inattendue s'est produite lors de l'envoi des données: {e}")
+
+    def get_interval(self):
+        try:
+            # pour débugger, je veux afficher l'url interrogée avec les paramètres
+            self.logger.debug(f"[API.py] - URL interrogée: {self.url}/workers/interval?token={self.token}")
+            params = {"token": self.token}
+            interval = requests.get(f"{self.url}/workers/interval", params=params)
+            interval.raise_for_status()
+            return interval.json()
+        except requests.exceptions.HTTPError as e:
+            self.logger.error(f"[API.py] - Une erreur s'est produite lors de la récupération des intervalles: {e}")
+        except requests.exceptions.Timeout:
+            self.logger.error("[API.py] - Timeout lors de la récupération des intervalles")
+        except requests.exceptions.TooManyRedirects:
+            self.logger.error("[API.py] - Trop de redirections lors de la récupération des intervalles (URL incorrecte)")
+        except requests.exceptions.ConnectionError as e:
+            self.logger.error(f"[API.py] - Une erreur s'est produite lors de la récupération des intervalles: {e}")
+        except requests.exceptions.RequestException as e:
+            self.logger.error(f"[API.py] - Une erreur s'est produite lors de la récupération des intervalles: {e}")
+        except Exception as e:
+            self.logger.error(f"[API.py] - Une erreur inattendue s'est produite lors de la récupération des intervalles: {e}")

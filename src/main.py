@@ -42,12 +42,6 @@ def check_input_data():
     if not re.match(r'^[0-9a-f]{64}$', token):
         raise Exception("Le token doit contenir 32 caractères hexadécimaux.")
     
-    interval = os.getenv('interval')
-    if interval is None:
-        raise Exception("L'intervalle n'est pas défini.")
-    if not interval.isdigit() or int(interval) <= 0:
-        raise Exception("L'intervalle doit être un entier positif.")
-
     # Url must be defined and valid
     url = os.getenv('url')
     if url is None:
@@ -195,6 +189,9 @@ async def scheduled_main_loop(api, interval=1800):
     start_time = time.time()
     database = SQLiteDatabase("data.db", logger=logger)
 
+    interval = api.get_interval()["interval"]
+    logger.info(f"[main.py] - Interval de récupération: {interval} secondes")
+    
     # Mettre à jour les devices
     devices = api.get_devices()
 
@@ -233,7 +230,6 @@ async def main_execution_thread():
     try:
         load_dotenv()
         check_input_data()
-        interval = int(os.getenv("interval"))
         api = API(os.getenv("url"), os.getenv("token"), logger=logger)
     except Exception as e:
         logger.error(f"[main.py] - Une erreur s'est produite lors de l'initialisation: {e}")
@@ -241,7 +237,7 @@ async def main_execution_thread():
         await main_execution_thread()
     
     try:
-        await scheduled_main_loop(api, interval)
+        await scheduled_main_loop(api)
     except Exception as e:
         logger.error(f"[main.py] - Une erreur s'est produite lors de l'exécution de la boucle principale: {e}")
 
