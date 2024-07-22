@@ -188,12 +188,14 @@ async def scheduled_main_loop(api, interval=1800):
     logger.info("[main.py] - Début de la boucle principale")
     start_time = time.time()
     database = SQLiteDatabase("data.db", logger=logger)
-
-    interval = api.get_interval()["interval"]
-    logger.info(f"[main.py] - Interval de récupération: {interval} secondes")
     
-    # Mettre à jour les devices
-    devices = api.get_devices()
+    # Mettre à jour les devices et l'intervalle
+    worker = api.get_worker()
+
+    interval = worker["interval"]
+    devices = worker["devices"]
+
+    logger.info(f"[main.py] - Interval de récupération: {interval} secondes")
 
     while time.time() - start_time < interval:
         for device in devices:
