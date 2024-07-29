@@ -66,5 +66,27 @@ Laisser `Grub` s'installer sur le disque `sda`
 
 Laisser l'installation se faire.
 
+## Configurer le démarrage automatique
+
+Vous rendre dans le BIOS (SUPP au démarrage et mot de passe `Fireport`).
+
+Rendez-vous dans l'onglet `Advanced`
+
+trouver l'option ` Power Loss Recovery Option` et choissiez la valeur `Always On`
+
+Plus bas, sur la partie `AUTO Power-On` ouvrer le menu
+
+Sur l'option de ce menu, mettre `SET AUTO Power-On` sur `Enabled` ainsi que tous les jours de la semaine.
+
+Faites `F10' pour sauvegarder.
+
+
+## Test Auto Power-On
+
+Une fois l'auto power-on configuré faite le test suivant : 
+- éteignez le Wyse
+- Débrancher l'aimentation pour simuler une panne de courant
+- Rebrancher l'aimentation
+=> Le wyse devrait démarrer.
 
 
