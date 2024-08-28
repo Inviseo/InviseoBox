@@ -1,6 +1,19 @@
 # InviseoBox
 
-Un service léger et non-intrusif installé sur le client pour récupérer et envoyer des données vers le serveur Inviseo.
+## Aperçu
+
+La `InviseoBox` est une des composante de la solution `Inviseo` avec le `Logiciel Inviseo` et la `InviseoPus`.
+
+La `InviseoBox` est un client léger équipé d'un debian (latest) comme système d'exploitation sans interface graphique.
+Configuré avec les utilitaires standard pour les systèmes debian et avec SSH, cette box branchée dans le réseau de nos clients, permet de réléver des informations de capteurs (`InviseopPus`).
+Cette vient paramétrée avec un micro logiciel, le micro logiciel de la `InviseoBox`.
+Ce micro logiciel est capable de communiquer avec les protocole modbus RS-485 (via une passerelle modbus) et le protocole http(s).
+
+De manière récurente, la `InviseoBox` envoie vers l'url paramétrée, les données travaillées (moyenne, minimale, maximale, différence).
+
+La `InviseoBox` est associé au compte du client (a un site précis) en utilisant un jeton d'authentification. Ainsi un site (bâtiment) peux avoir 0 ou plusieurs `InviseoBox` qui renvoie des données identifiées.
+
+La pas de renvoie des donénes vers le serveur est parametrable de le docker-compose avec le parametre `interval`
 
 ## 🚀 Installation (Production)
 
