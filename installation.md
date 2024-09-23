@@ -113,12 +113,18 @@ sudo docker logs inviseobox
 
 ## 🛠️ Installation (Développement)
 
-Installer les dépendances :
+Installer les dépendances (Linux) :
 
 ```bash
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+```
+
+Ou sur Windows
+
+```bash
+.\venv\Scripts\activate
 ```
 
 ### 🔌 Sortir de l'environnement virtuel
