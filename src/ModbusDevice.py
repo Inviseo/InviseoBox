@@ -1,4 +1,4 @@
-from pymodbus import client, FramerType
+from pymodbus import client
 from struct import pack, unpack
 from Logger import Logger
 import time
