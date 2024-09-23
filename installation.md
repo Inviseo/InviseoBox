@@ -151,6 +151,13 @@ source venv/bin/activate
 python main.py
 ```
 
+Ou sur Windows
+
+```bash
+.\venv\Scripts\activate
+python main.py
+```
+
 ### 📝 Logs
 
 Les logs sont accessibles grâce à la commande suivante :
@@ -158,3 +165,11 @@ Les logs sont accessibles grâce à la commande suivante :
 ```bash
 sudo docker logs inviseobox
 ```
+
+### Lancer les tests unitaires
+
+```bash
+.\venv\Scripts\activate
+pytest test/
+```
+
