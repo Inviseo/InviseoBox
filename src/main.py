@@ -42,12 +42,6 @@ def check_input_data():
     if not re.match(r'^[0-9a-f]{64}$', token):
         raise Exception("Le token doit contenir 32 caractères hexadécimaux.")
     
-    interval = os.getenv('interval')
-    if interval is None:
-        raise Exception("L'intervalle n'est pas défini.")
-    if not interval.isdigit() or int(interval) <= 0:
-        raise Exception("L'intervalle doit être un entier positif.")
-
     # Url must be defined and valid
     url = os.getenv('url')
     if url is None:
@@ -194,17 +188,41 @@ async def scheduled_main_loop(api, interval=1800):
     logger.info("[main.py] - Début de la boucle principale")
     start_time = time.time()
     database = SQLiteDatabase("data.db", logger=logger)
+    
+    # Mettre à jour les devices et l'intervalle
+    worker = api.get_worker()
 
-    # Mettre à jour les devices
-    devices = api.get_devices()
+    interval = worker["interval"]
+    devices = worker["devices"]
 
-    while time.time() - start_time < interval:
-        for device in devices:
-            if device["communication"]["protocol"] == "Modbus" and device["communication"]["mode"] == "RTU":
-                await handle_modbus_device(device, database)
-            elif device["communication"]["protocol"] == "WebService":
-                await handle_web_service_device(device, database)
+    logger.info(f"[main.py] - Interval de récupération: {interval} secondes")
 
+    async def process_modbus_devices():
+        while time.time() - start_time < interval:
+            for device in devices:
+                if device["communication"]["protocol"] == "Modbus" and device["communication"]["mode"] == "RTU":
+                    await handle_modbus_device(device, database)
+            await asyncio.sleep(10)  # Attendre 10 secondes avant la prochaine requête Modbus
+
+    async def process_web_service_devices():
+        while time.time() - start_time < interval:
+            for device in devices:
+                if device["communication"]["protocol"] == "WebService":
+                    await handle_web_service_device(device, database)
+            await asyncio.sleep(600)  # Attendre 10 minutes (600 secondes) avant la prochaine requête WebService
+
+    # Démarrer les deux tâches asynchrones en parallèle
+    modbus_task = asyncio.create_task(process_modbus_devices())
+    web_service_task = asyncio.create_task(process_web_service_devices())
+
+    # Attendre que le temps imparti soit écoulé
+    await asyncio.sleep(interval)
+
+    # Annuler les tâches si elles sont encore en cours
+    modbus_task.cancel()
+    web_service_task.cancel()
+
+    # Construire et envoyer les statuts des appareils
     devices_status = build_devices_status(database, devices)
     devices_status_to_send.append(devices_status)
     append_to_json_file(devices_status_file, devices_status)
@@ -216,6 +234,7 @@ async def scheduled_main_loop(api, interval=1800):
     except Exception as e:
         logger.error(f"[main.py] - Erreur d'envoi du statut des appareils: {e}")
 
+    # Construire et envoyer les champs des appareils
     fields = build_fields(database, devices)
     fields_to_send.append(fields)
     append_to_json_file(fields_file, fields)
@@ -233,7 +252,6 @@ async def main_execution_thread():
     try:
         load_dotenv()
         check_input_data()
-        interval = int(os.getenv("interval"))
         api = API(os.getenv("url"), os.getenv("token"), logger=logger)
     except Exception as e:
         logger.error(f"[main.py] - Une erreur s'est produite lors de l'initialisation: {e}")
@@ -241,7 +259,7 @@ async def main_execution_thread():
         await main_execution_thread()
     
     try:
-        await scheduled_main_loop(api, interval)
+        await scheduled_main_loop(api)
     except Exception as e:
         logger.error(f"[main.py] - Une erreur s'est produite lors de l'exécution de la boucle principale: {e}")
 

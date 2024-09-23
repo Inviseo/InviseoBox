@@ -160,7 +160,6 @@ cython_debug/
 #.idea/
 
 data.db
-docker-compose.yml
 .env
 device_status_to_send.json
 fields_to_send.json
