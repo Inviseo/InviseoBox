@@ -1,6 +1,7 @@
 from pymodbus import client
 from struct import pack, unpack
 from Logger import Logger
+from framer import FramerType
 import time
 
 format_map = {
@@ -62,7 +63,7 @@ def decodeValue(byte_order, value_class, value):
 class SerialRTUModbusDevice:
     def __init__(self, port, baudrate, stopbits, bytesize, parity, logger=Logger()):
         self.client = client.AsyncModbusSerialClient(
-            method="rtu",
+            framer=FramerType.RTU,
             port=port,
             stopbits=stopbits,
             bytesize=bytesize,
