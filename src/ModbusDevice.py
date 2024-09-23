@@ -1,7 +1,6 @@
-from pymodbus import client
+from pymodbus import client, FramerType
 from struct import pack, unpack
 from Logger import Logger
-from framer import FramerType
 import time
 
 format_map = {
