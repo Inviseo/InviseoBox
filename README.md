@@ -38,7 +38,7 @@ Dans l'idée, nos clients sont souvent amenés a créer un réseau dédié aux `
 
 La `InviseoBox` doit être préparée et configurée dans nos locaux **AVANT** l'installation chez le client.
 Pour vérifier que tous est bon il suffit de rensigner la `InviseoBox` sur notre logiciel et d'y ajouter les `InviseoPus` (capteurs).
-Le tout peut se faire via notre **interface d'administration** accessible uniquement avec le compte **super admin** contact@inviseo.fr
+Le tout peut se faire via notre **interface d'administration** accessible uniquement avec le compte **super admin**.
 
 Pour installer la `InviseoBox` chez un client il suffit de brancher le cable réseau de type `RJ-45` de la `InviseoBox` dans la baie serveur de notre client. a défaut sur le routeur qui fournit le réseau aux `InviseoPus`.
 
