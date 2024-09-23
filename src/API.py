@@ -8,31 +8,31 @@ class API:
         self.token = token
         self.logger = logger
 
-    def get_devices(self, number_of_attempts=0):
+    def get_worker(self, number_of_attempts=0):
         while number_of_attempts < 3:
             try:
                 number_of_attempts += 1
                 params = {"token": self.token}
-                devices = requests.get(f"{self.url}/workers/devices", params=params)
-                devices.raise_for_status()
-                return devices.json()
+                worker = requests.get(f"{self.url}/workers", params=params)
+                worker.raise_for_status()
+                return worker.json()
             except requests.exceptions.HTTPError as e:
-                self.logger.error(f"[API.py] - Une erreur s'est produite lors de la récupération des appareils: {e}")
+                self.logger.error(f"[API.py] - Une erreur s'est produite lors de la récupération du worker: {e}")
             except requests.exceptions.Timeout:
-                self.logger.error("[API.py] - Timeout lors de la récupération des appareils")
+                self.logger.error("[API.py] - Timeout lors de la récupération du worker")
                 time.sleep(5)
                 return self.get_devices(number_of_attempts)
             except requests.exceptions.TooManyRedirects:
-                self.logger.error("[API.py] - Trop de redirections lors de la récupération des appareils (URL incorrecte)")
+                self.logger.error("[API.py] - Trop de redirections lors de la récupération du worker (URL incorrecte)")
                 break
             except requests.exceptions.ConnectionError as e:
-                self.logger.error(f"[API.py] - Une erreur s'est produite lors de la récupération des appareils: {e}")
+                self.logger.error(f"[API.py] - Une erreur s'est produite lors de la récupération du worker: {e}")
                 break
             except requests.exceptions.RequestException as e:
-                self.logger.error(f"[API.py] - Une erreur s'est produite lors de la récupération des appareils: {e}")
+                self.logger.error(f"[API.py] - Une erreur s'est produite lors de la récupération du worker: {e}")
                 break
             except Exception as e:
-                self.logger.error(f"[API.py] - Une erreur inattendue s'est produite lors de la récupération des appareils: {e}")
+                self.logger.error(f"[API.py] - Une erreur inattendue s'est produite lors de la récupération du worker: {e}")
                 break
 
     def send_devices_status(self, status):
