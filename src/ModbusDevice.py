@@ -1,5 +1,4 @@
 from pymodbus import client
-from pymodbus.framer import FramerType
 from struct import pack, unpack
 from Logger import Logger
 import time
@@ -63,7 +62,6 @@ def decodeValue(byte_order, value_class, value):
 class SerialRTUModbusDevice:
     def __init__(self, port, baudrate, stopbits, bytesize, parity, logger=Logger()):
         self.client = client.AsyncModbusSerialClient(
-            framer=FramerType.RTU,
             port=port,
             stopbits=stopbits,
             bytesize=bytesize,
