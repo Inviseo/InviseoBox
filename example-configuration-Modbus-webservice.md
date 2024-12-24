@@ -391,13 +391,13 @@ J'ai pris soin d'y ajouter des commnetaire et la JSDoc.
  * entre un appareil installés chez le client (box et capteur) et le système (initialement inviseo)
  */
 interface Configuration {
-  /** URL utilisée pour établir la communication avec l'appareil (exemple : API REST). */
+  /** URL utilisée pour établir la communication avec l'appareil (dans le cas d'un capteur en qui communique en http). */
   url?: string;
   
   /** Paramètres envoyés à l'appareil pour récupérer les données (exemple : clé, registre). */
   parameters?: Record<string, string>;
   
-  /** Format de la réponse retournée par l'appareil (exemple : min, max, avg). */
+  /** Format de la réponse retournée par l'appareil (exemple : min, max, avg ou diff). */
   response_format?: string[];
   
   /** Port série pour les communications Modbus (exemple : /dev/serial/...). */
@@ -409,16 +409,17 @@ interface Configuration {
   /** Nombre de bits de données pour la communication série. */
   bytesize?: number;
   
-  /** Parité utilisée pour la communication (exemple : N = None, E = Even). */
+  /** Parité utilisée pour la communication (exemple : N = None, E = Even ou O = Odd). */
   parity?: string;
   
   /** Vitesse de transmission (baudrate) en bits par seconde. */
+  /** nous avons remarqué que le baudrate 9200 etait idéal pour notre communication */
   baudrate?: number;
   
   /** Registre utilisé pour accéder aux données via Modbus. */
   register?: string;
   
-  /** Adresse du registre (emplacement mémoire). */
+  /** Adresse du registre (emplacement mémoire du capteur Modbus). */
   address?: number;
   
   /** Identifiant de l'esclave dans une communication Modbus (multi-appareils). */
@@ -452,7 +453,7 @@ interface Communication {
 }
 
 /**
- * Measurement (Mesure) représente une donnée collectée par un appareil, comme la température ou l'humidité.
+ * Measurement (Mesure) représente une donnée collectée par un appareil, comme la température, l'humidité, la puissance ou encore la consommation.
  */
 interface Measurement {
   /** Identifiant unique de la mesure. */
@@ -462,6 +463,7 @@ interface Measurement {
   name: string;
   
   /** Statut de la mesure (exemple : "active", "dead"). */
+  /** Définit si la mesure a pu être relever ou non */
   status: string;
   
   /** Liste d'usages spécifiques pour cette mesure (exemple : ["process"]). */
@@ -481,7 +483,7 @@ interface Measurement {
 }
 
 /**
- * Device (Appareil) représente un appareil connecté au système, capable de fournir des mesures.
+ * Device (Appareil) représente un appareil connecté au système, capable de fournir des mesures et possedant au moins une mesure.
  */
 interface Device {
   /** Identifiant unique de l'appareil. */
@@ -491,9 +493,10 @@ interface Device {
   name: string;
   
   /** Statut de l'appareil (exemple : "active", "dead"). */
+  /** Idem pour les mesures. Definit si l'appareil a pu etre consulté */
   status: string;
   
-  /** Référence à l'identifiant du "worker" qui gère cet appareil. */
+  /** Référence à l'identifiant du "worker" (inviseobox) qui gère cet appareil. */
   worker: string;
   
   /** Informations sur la communication avec l'appareil. */
@@ -502,7 +505,7 @@ interface Device {
   /** Liste des mesures disponibles sur cet appareil. */
   measurements: Measurement[];
   
-  /** Référence optionnelle de l'appareil (utile pour la documentation ou le suivi). */
+  /** Référence optionnelle de l'appareil (utile pour la documentation ou le suivi externe). */
   reference?: string;
   
   /** Date de création de cet appareil dans le système. */
@@ -516,7 +519,7 @@ interface Device {
 }
 
 /**
- * Site représente un site ou une unité contenant un ensemble d'appareils connectés.
+ * Site (batiment) représente un site ou une unité contenant un ensemble d'appareils connectés.
  */
 interface Site {
   /** Identifiant unique du site. */
