@@ -62,7 +62,6 @@ def decodeValue(byte_order, value_class, value):
 class SerialRTUModbusDevice:
     def __init__(self, port, baudrate, stopbits, bytesize, parity, logger=Logger()):
         self.client = client.AsyncModbusSerialClient(
-            method="rtu",
             port=port,
             stopbits=stopbits,
             bytesize=bytesize,

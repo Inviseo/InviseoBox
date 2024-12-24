@@ -197,13 +197,32 @@ async def scheduled_main_loop(api, interval=1800):
 
     logger.info(f"[main.py] - Interval de récupération: {interval} secondes")
 
-    while time.time() - start_time < interval:
-        for device in devices:
-            if device["communication"]["protocol"] == "Modbus" and device["communication"]["mode"] == "RTU":
-                await handle_modbus_device(device, database)
-            elif device["communication"]["protocol"] == "WebService":
-                await handle_web_service_device(device, database)
+    async def process_modbus_devices():
+        while time.time() - start_time < interval:
+            for device in devices:
+                if device["communication"]["protocol"] == "Modbus" and device["communication"]["mode"] == "RTU":
+                    await handle_modbus_device(device, database)
+            await asyncio.sleep(10)  # Attendre 10 secondes avant la prochaine requête Modbus
 
+    async def process_web_service_devices():
+        while time.time() - start_time < interval:
+            for device in devices:
+                if device["communication"]["protocol"] == "WebService":
+                    await handle_web_service_device(device, database)
+            await asyncio.sleep(600)  # Attendre 10 minutes (600 secondes) avant la prochaine requête WebService
+
+    # Démarrer les deux tâches asynchrones en parallèle
+    modbus_task = asyncio.create_task(process_modbus_devices())
+    web_service_task = asyncio.create_task(process_web_service_devices())
+
+    # Attendre que le temps imparti soit écoulé
+    await asyncio.sleep(interval)
+
+    # Annuler les tâches si elles sont encore en cours
+    modbus_task.cancel()
+    web_service_task.cancel()
+
+    # Construire et envoyer les statuts des appareils
     devices_status = build_devices_status(database, devices)
     devices_status_to_send.append(devices_status)
     append_to_json_file(devices_status_file, devices_status)
@@ -215,6 +234,7 @@ async def scheduled_main_loop(api, interval=1800):
     except Exception as e:
         logger.error(f"[main.py] - Erreur d'envoi du statut des appareils: {e}")
 
+    # Construire et envoyer les champs des appareils
     fields = build_fields(database, devices)
     fields_to_send.append(fields)
     append_to_json_file(fields_file, fields)

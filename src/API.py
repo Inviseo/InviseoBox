@@ -21,7 +21,7 @@ class API:
             except requests.exceptions.Timeout:
                 self.logger.error("[API.py] - Timeout lors de la récupération du worker")
                 time.sleep(5)
-                return self.get_devices(number_of_attempts)
+                return self.get_worker(number_of_attempts)
             except requests.exceptions.TooManyRedirects:
                 self.logger.error("[API.py] - Trop de redirections lors de la récupération du worker (URL incorrecte)")
                 break
