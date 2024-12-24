@@ -60,6 +60,9 @@ Pour cela vous devez récupérer son IP avec `netdiscover` (pour linux) ou [adva
 ## Configuration
 [Configuration](./configuration.md)
 
+## Format requetes et reponses
+[Forrmat requetes et reponses](example-configuration-Modbus-webservice.md)
+
 ## Consignes de développement
 [Consignes de  developpement](./developpement.md)
 
