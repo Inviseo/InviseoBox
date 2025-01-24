@@ -63,6 +63,8 @@ Pour cela vous devez récupérer son IP avec `netdiscover` (pour linux) ou [adva
 ## Format requetes et reponses
 [Forrmat requetes et reponses](example-configuration-Modbus-webservice.md)
 
+## Procédure si la InviseoBox n'envoie plus de données
+[Procédure pour la redémarrer](./fixEnvoiePlusDeDonnées.md)
 ## Consignes de développement
 [Consignes de  developpement](./developpement.md)
 
@@ -71,3 +73,4 @@ Pour cela vous devez récupérer son IP avec `netdiscover` (pour linux) ou [adva
 
 ## Contributeurs
 [Contributeurs](./contribution.md)
+
